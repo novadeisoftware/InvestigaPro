@@ -35,12 +35,17 @@ return [
     |
     */
 
-    'guards' => [
-        'web' => [
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
-    ],
+     // config/auth.php
+     'guards' => [
+         'web' => [
+             'driver' => 'session', // Asegúrate que diga session
+             'provider' => 'users',
+         ],
+         'sanctum' => [
+             'driver' => 'session', // Cámbialo a session para desarrollo web
+             'provider' => 'users',
+         ],
+     ],
 
     /*
     |--------------------------------------------------------------------------

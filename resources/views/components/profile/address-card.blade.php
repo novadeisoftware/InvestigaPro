@@ -1,4 +1,4 @@
-<div x-data="{saveProfile(){
+{{--<div x-data="{saveProfile(){
     console.log('Saving profile...');
 }}">
     <div class="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
@@ -105,4 +105,4 @@
             </form>
         </div>
     </x-ui.modal>
-</div>
+</div>--}}

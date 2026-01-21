@@ -1,106 +1,62 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DashboardController;
+use App\Actions\Fortify\DeleteUser;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
-// dashboard pages
+// 1. REDIRECCIÓN INICIAL
 Route::get('/', function () {
-    return view('pages.dashboard.ecommerce', ['title' => 'E-commerce Dashboard']);
-})->name('dashboard');
+    return view('welcome');
+});
 
-// calender pages
-Route::get('/calendar', function () {
-    return view('pages.calender', ['title' => 'Calendar']);
-})->name('calendar');
+// 2. RUTAS PROTEGIDAS
+Route::middleware([
+    'auth',
+    config('jetstream.auth_session'),
+    'verified',
+])->group(function () {
 
-// profile pages
-Route::get('/profile', function () {
-    return view('pages.profile', ['title' => 'Profile']);
-})->name('profile');
+    // --- ESTA ES LA RUTA DE ELIMINACIÓN (Fuera del dashboard) ---
+    Route::delete('/user/delete-account-direct', function (Request $request, DeleteUser $deleter) {
+        if (! Hash::check($request->password, auth()->user()->password)) {
+            return back()->withErrors(['password' => 'La contraseña es incorrecta.'], 'deleteUser');
+        }
 
-// form pages
-Route::get('/form-elements', function () {
-    return view('pages.form.form-elements', ['title' => 'Form Elements']);
-})->name('form-elements');
+        $deleter->delete(auth()->user());
+        return redirect('/login');
+    })->name('user.destroy.manual');
 
-// tables pages
-Route::get('/basic-tables', function () {
-    return view('pages.tables.basic-tables', ['title' => 'Basic Tables']);
-})->name('basic-tables');
+    // Dashboard
+    Route::get('/dashboard', function () {
+        return view('pages.dashboard.ecommerce', ['title' => 'InvestigaPro']);
+    })->name('dashboard');
 
-// pages
+    // Calendario
+    Route::get('/calendar', function () {
+        return view('pages.calender', ['title' => 'Calendar']);
+    })->name('calendar');
 
-Route::get('/blank', function () {
-    return view('pages.blank', ['title' => 'Blank']);
-})->name('blank');
+    // Perfil de Usuario
+    Route::get('/profile', function () {
+        return view('pages.profile', ['title' => 'Profile']);
+    })->name('profile');
 
-// error pages
+    // Elementos de UI y otros...
+    Route::get('/form-elements', function () { return view('pages.form.form-elements', ['title' => 'Form Elements']); })->name('form-elements');
+    Route::get('/basic-tables', function () { return view('pages.tables.basic-tables', ['title' => 'Basic Tables']); })->name('basic-tables');
+    Route::get('/line-chart', function () { return view('pages.chart.line-chart', ['title' => 'Line Chart']); })->name('line-chart');
+    Route::get('/bar-chart', function () { return view('pages.chart.bar-chart', ['title' => 'Bar Chart']); })->name('bar-chart');
+    Route::get('/alerts', function () { return view('pages.ui-elements.alerts', ['title' => 'Alerts']); })->name('alerts');
+    Route::get('/avatars', function () { return view('pages.ui-elements.avatars', ['title' => 'Avatars']); })->name('avatars');
+    Route::get('/badge', function () { return view('pages.ui-elements.badges', ['title' => 'Badges']); })->name('badges');
+    Route::get('/buttons', function () { return view('pages.ui-elements.buttons', ['title' => 'Buttons']); })->name('buttons');
+    Route::get('/image', function () { return view('pages.ui-elements.images', ['title' => 'Images']); })->name('images');
+    Route::get('/videos', function () { return view('pages.ui-elements.videos', ['title' => 'Videos']); })->name('videos');
+    Route::get('/blank', function () { return view('pages.blank', ['title' => 'Blank']); })->name('blank');
+});
+
+// 3. RUTAS PÚBLICAS
 Route::get('/error-404', function () {
     return view('pages.errors.error-404', ['title' => 'Error 404']);
 })->name('error-404');
-
-// chart pages
-Route::get('/line-chart', function () {
-    return view('pages.chart.line-chart', ['title' => 'Line Chart']);
-})->name('line-chart');
-
-Route::get('/bar-chart', function () {
-    return view('pages.chart.bar-chart', ['title' => 'Bar Chart']);
-})->name('bar-chart');
-
-
-// authentication pages
-Route::get('/signin', function () {
-    return view('pages.auth.signin', ['title' => 'Sign In']);
-})->name('signin');
-
-Route::get('/signup', function () {
-    return view('pages.auth.signup', ['title' => 'Sign Up']);
-})->name('signup');
-
-// ui elements pages
-Route::get('/alerts', function () {
-    return view('pages.ui-elements.alerts', ['title' => 'Alerts']);
-})->name('alerts');
-
-Route::get('/avatars', function () {
-    return view('pages.ui-elements.avatars', ['title' => 'Avatars']);
-})->name('avatars');
-
-Route::get('/badge', function () {
-    return view('pages.ui-elements.badges', ['title' => 'Badges']);
-})->name('badges');
-
-Route::get('/buttons', function () {
-    return view('pages.ui-elements.buttons', ['title' => 'Buttons']);
-})->name('buttons');
-
-Route::get('/image', function () {
-    return view('pages.ui-elements.images', ['title' => 'Images']);
-})->name('images');
-
-Route::get('/videos', function () {
-    return view('pages.ui-elements.videos', ['title' => 'Videos']);
-})->name('videos');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
