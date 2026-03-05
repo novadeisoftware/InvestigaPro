@@ -6,37 +6,39 @@ use Illuminate\Http\Request;
 
 class SidebarController extends Controller
 {
-    public function getMenuData()
+    /**
+     * Retorna la estructura cruda del menú lateral.
+     * * Este método centraliza toda la navegación de la aplicación.
+     * Se utiliza a través de un View Composer para inyectar estos datos
+     * automáticamente en la vista del sidebar sin repetir código.
+     *
+     * @return array Estructura jerárquica de grupos, items y sub-items.
+     */
+    public function getMenuDataRaw()
     {
-        $menuGroups = [
+        return [
+            // Grupo principal de navegación
             [
                 'title' => 'Menu',
                 'items' => [
+
                     [
                         'icon' => 'grid-icon',
-                        'name' => 'Dashboard',
-                        'subItems' => [
-                            ['name' => 'Ecommerce', 'path' => '/'],
-                            ['name' => 'Analytics', 'path' => '/analytics'],
-                            ['name' => 'Marketing', 'path' => '/marketing'],
-                            ['name' => 'CRM', 'path' => '/crm'],
-                            ['name' => 'Stocks', 'path' => '/stocks'],
-                            ['name' => 'SaaS', 'path' => '/saas', 'new' => true],
-                            ['name' => 'Logistics', 'path' => '/logistics', 'new' => true],
-                        ],
+                        'name' => 'Panel de Control',
+                        'path' => '/dashboard', // Item simple sin sub-items
                     ],
-                    [
-                        'icon' => 'bot-icon',
+                    /*[
+                        'icon' => 'bot-icon', // Icono representativo para la IA
                         'name' => 'AI Assistant',
-                        'new' => true,
+                        'new' => true, // Atributo para mostrar badge de "Nuevo" en la UI
                         'subItems' => [
                             ['name' => 'Text Generator', 'path' => '/text-generator'],
                             ['name' => 'Image Generator', 'path' => '/image-generator'],
                             ['name' => 'Code Generator', 'path' => '/code-generator'],
                             ['name' => 'Video Generator', 'path' => '/video-generator'],
                         ],
-                    ],
-                    [
+                    ],*/
+                   /* [
                         'icon' => 'cart-icon',
                         'name' => 'E-commerce',
                         'new' => true,
@@ -50,25 +52,30 @@ class SidebarController extends Controller
                             ['name' => 'Transactions', 'path' => '/transactions'],
                             ['name' => 'Single Transaction', 'path' => '/single-transaction'],
                         ],
+                    ],*/
+                    [
+                        'icon' => 'project-icon',
+                        'name' => 'Investigaciones',
+                        'path' => '/project', // Item simple sin sub-items
+                    ],
+                    [
+                        'icon' => 'pizarra-icon',
+                        'name' => 'Aulas',
+                        'path' => '/classroom', // Item simple sin sub-items
                     ],
                     [
                         'icon' => 'calendar-icon',
                         'name' => 'Calendar',
-                        'path' => '/calendar',
+                        'path' => '/calendar', // Item simple sin sub-items
                     ],
-                    [
-                        'icon' => 'user-circle-icon',
-                        'name' => 'User Profile',
-                        'path' => '/profile',
-                    ],
-                    [
+                    /*[
                         'icon' => 'task-icon',
                         'name' => 'Task',
                         'subItems' => [
                             ['name' => 'List', 'path' => '/task-list', 'pro' => false],
                             ['name' => 'Kanban', 'path' => '/task-kanban', 'pro' => false],
                         ],
-                    ],
+                    ],*/
                     [
                         'icon' => 'list-icon',
                         'name' => 'Forms',
@@ -85,7 +92,7 @@ class SidebarController extends Controller
                             ['name' => 'Data Tables', 'path' => '/data-tables', 'pro' => false],
                         ],
                     ],
-                    [
+                    /*[
                         'icon' => 'page-icon',
                         'name' => 'Pages',
                         'subItems' => [
@@ -96,15 +103,54 @@ class SidebarController extends Controller
                             ['name' => 'Integrations', 'path' => '/integrations', 'new' => true],
                             ['name' => 'Blank Page', 'path' => '/blank', 'pro' => false],
                             ['name' => '404 Error', 'path' => '/error-404', 'pro' => false],
-                            ['name' => '500 Error', 'path' => '/error-500', 'pro' => false],
-                            ['name' => '503 Error', 'path' => '/error-503', 'pro' => false],
-                            ['name' => 'Coming Soon', 'path' => '/coming-soon', 'pro' => false],
-                            ['name' => 'Maintenance', 'path' => '/maintenance', 'pro' => false],
-                            ['name' => 'Success', 'path' => '/success', 'pro' => false],
+                        ],
+                    ],*/
+                ],
+            ],
+
+            // Sección de utilidades y configuración del sistema
+            [
+                'title' => 'Configuración',
+                'items' => [
+                    [
+                        'icon' => 'subscription-icon',
+                        'name' => 'Planes',
+                        'path' => '/subscription',
+                    ],
+                    [
+                        'icon' => 'user-circle-icon',
+                        'name' => 'Usuarios',
+                        'path' => '/admin/users',
+                    ],
+                    [
+                        'icon' => 'university-icon',
+                        'name' => 'Universidades',
+                        'path' => '/admin/university',
+                    ],
+                    [
+                        'icon' => 'pie-chart-icon',
+                        'name' => 'Charts',
+                        'subItems' => [
+                            ['name' => 'Line Chart', 'path' => '/line-chart', 'pro' => false],
+                            ['name' => 'Bar Chart', 'path' => '/bar-chart', 'pro' => false],
+                            ['name' => 'Pie Chart', 'path' => '/pie-chart', 'pro' => false],
+                        ],
+                    ],
+                    [
+                        'icon' => 'box-cube-icon',
+                        'name' => 'UI Elements',
+                        'subItems' => [
+                            ['name' => 'Alerts', 'path' => '/alerts', 'pro' => false],
+                            ['name' => 'Avatar', 'path' => '/avatars', 'pro' => false],
+                            ['name' => 'Badge', 'path' => '/badge', 'pro' => false],
+                            ['name' => 'Buttons', 'path' => '/buttons', 'pro' => false],
+                            ['name' => 'Images', 'path' => '/image', 'pro' => false],
+                            ['name' => 'Videos', 'path' => '/videos', 'pro' => false],
                         ],
                     ],
                 ],
             ],
+            // Sección dedicada a la atención al cliente
             [
                 'title' => 'Support',
                 'items' => [
@@ -132,60 +178,6 @@ class SidebarController extends Controller
                     ],
                 ],
             ],
-            [
-                'title' => 'Others',
-                'items' => [
-                    [
-                        'icon' => 'pie-chart-icon',
-                        'name' => 'Charts',
-                        'subItems' => [
-                            ['name' => 'Line Chart', 'path' => '/line-chart', 'pro' => false],
-                            ['name' => 'Bar Chart', 'path' => '/bar-chart', 'pro' => false],
-                            ['name' => 'Pie Chart', 'path' => '/pie-chart', 'pro' => false],
-                        ],
-                    ],
-                    [
-                        'icon' => 'box-cube-icon',
-                        'name' => 'UI Elements',
-                        'subItems' => [
-                            ['name' => 'Alerts', 'path' => '/alerts', 'pro' => false],
-                            ['name' => 'Avatar', 'path' => '/avatars', 'pro' => false],
-                            ['name' => 'Badge', 'path' => '/badge', 'pro' => false],
-                            ['name' => 'Breadcrumb', 'path' => '/breadcrumb', 'pro' => false],
-                            ['name' => 'Buttons', 'path' => '/buttons', 'pro' => false],
-                            ['name' => 'Buttons Group', 'path' => '/buttons-group', 'pro' => false],
-                            ['name' => 'Cards', 'path' => '/cards', 'pro' => false],
-                            ['name' => 'Carousel', 'path' => '/carousel', 'pro' => false],
-                            ['name' => 'Dropdowns', 'path' => '/dropdowns', 'pro' => false],
-                            ['name' => 'Images', 'path' => '/image', 'pro' => false],
-                            ['name' => 'Links', 'path' => '/links', 'pro' => false],
-                            ['name' => 'List', 'path' => '/list', 'pro' => false],
-                            ['name' => 'Modals', 'path' => '/modals', 'pro' => false],
-                            ['name' => 'Notification', 'path' => '/notifications', 'pro' => false],
-                            ['name' => 'Pagination', 'path' => '/pagination', 'pro' => false],
-                            ['name' => 'Popovers', 'path' => '/popovers', 'pro' => false],
-                            ['name' => 'Progressbar', 'path' => '/progress-bar', 'pro' => false],
-                            ['name' => 'Ribbons', 'path' => '/ribbons', 'pro' => false],
-                            ['name' => 'Spinners', 'path' => '/spinners', 'pro' => false],
-                            ['name' => 'Tabs', 'path' => '/tabs', 'pro' => false],
-                            ['name' => 'Tooltips', 'path' => '/tooltips', 'pro' => false],
-                            ['name' => 'Videos', 'path' => '/videos', 'pro' => false],
-                        ],
-                    ],
-                    [
-                        'icon' => 'plug-in-icon',
-                        'name' => 'Authentication',
-                        'subItems' => [
-                            ['name' => 'Sign In', 'path' => '/login', 'pro' => false],
-                            ['name' => 'Sign Up', 'path' => '/signup', 'pro' => false],
-                            ['name' => 'Reset Password', 'path' => '/reset-password', 'pro' => false],
-                            ['name' => 'Two Step Verification', 'path' => '/two-step-verification', 'pro' => false],
-                        ],
-                    ],
-                ],
-            ],
         ];
-
-        return view('components.sidebar', compact('menuGroups'));
     }
 }

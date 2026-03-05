@@ -1,0 +1,274 @@
+<?php
+
+namespace App\Livewire\Project;
+
+use App\Models\Project;
+use Livewire\Component;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
+
+
+// Importar el servicio de IA (lo crearemos en el siguiente paso)
+use App\Services\Ai\AiWriterService; 
+
+class SetupProject extends Component
+{
+    public Project $project;
+    public $Idproyect;
+    public $step = 1;
+
+    // Etapa 1: Datos Generales
+    public $area, $objeto, $problema, $solucion, $lugar, $tiempo;
+
+    // Etapa 2: Propuestas de Título
+    public $titleOptions = [];
+    public $title = '';
+    public $selectedTitle = '';
+    public $loading = false;
+
+    // Etapa 3: Propuestas de Título
+    public $formatSteps = [];
+
+    public $selectedFormatKey = '';
+
+    /**
+     * Definición de Reglas de Validación
+     */
+    protected function rules()
+    {
+        return [
+            'area' => 'required|string|min:5|max:255',
+            'objeto' => 'required|string|min:5|max:255',
+            'problema' => 'required|string|min:10',
+            'solucion' => 'required|string|min:10',
+            'lugar' => 'required|string|min:3',
+            'tiempo' => 'required|string|min:4',
+        ];
+    }
+
+    /**
+     * Nombres personalizados para los errores (UX Profesional)
+     */
+    protected $validationAttributes = [
+        'area' => 'área de estudio',
+        'objeto' => 'objeto de estudio',
+        'problema' => 'identificación del problema',
+        'solucion' => 'alternativa de solución',
+        'lugar' => 'lugar de ejecución',
+        'tiempo' => 'periodo de tiempo',
+        'title' => 'título',
+    ];
+
+    protected function messages()
+    {
+        return [
+            'required' => 'El campo :attribute es obligatorio.',
+            'min'      => 'El campo :attribute debe tener al menos :min caracteres.',
+            'selectedTitle.required' => 'Por favor, selecciona una propuesta de título para continuar.',
+        ];
+    }
+
+    public function mount(Project $project)
+    {
+        $this->Idproyect = $project->id;
+        $this->project = $project;
+        $this->step = $project->setup_step ?? 1;
+    
+        // Recuperar el título ya guardado para que no aparezca vacío al volver
+        $this->title = $project->title ?? '';
+        // Intentar marcar la opción seleccionada si coincide con el título
+        $this->selectedTitle = $project->title ?? '';
+    
+        $this->selectedFormatKey = $project->document_type ?? 'PROYECTO_DE_TESIS';
+    
+        if ($project->general_data) {
+            $gd = $project->general_data;
+            $this->area = $gd['area'] ?? '';
+            $this->objeto = $gd['objeto'] ?? '';
+            $this->problema = $gd['problema'] ?? '';
+            $this->solucion = $gd['solucion'] ?? '';
+            $this->lugar = $gd['lugar'] ?? '';
+            $this->tiempo = $gd['tiempo'] ?? '';
+            $this->titleOptions = $gd['suggested_titles'] ?? [];
+        }
+    
+        $this->loadFormatStructure();
+    }
+
+    /**
+     * Extrae los pasos del JSON de la universidad del proyecto
+     */
+     public function loadFormatStructure()
+     {
+         $university = $this->project->university;
+         if ($university && $university->reglas_json) {
+             $reglas = $university->reglas_json;
+             $keyBuscada = str_replace(' ', '_', strtoupper($this->selectedFormatKey));
+     
+             if (isset($reglas['formatos'][$keyBuscada])) {
+                 // Cargamos los pasos en el array para que Livewire los vincule
+                 $this->formatSteps = $reglas['formatos'][$keyBuscada]['pasos'];
+             }
+         }
+     }
+
+    /**
+     * Permite avanzar en las etapas
+     */
+    public function nextStep($step)
+    {
+        $this->step = $step;
+
+        // Si avanzamos al paso 3 (Estructura), preparamos la configuración
+        if($step == 3) {
+            // Aseguramos que el proyecto tenga los datos necesarios guardados
+            $this->project->refresh(); 
+            
+            // Aquí podrías cargar la configuración del JSON que definimos antes
+            // para que el paso 3 sepa qué esquema mostrar.
+            $this->document_type = $this->project->document_type;
+        }
+    }
+     
+     public function saveStep1() // <--- Inyectamos aquí
+     {
+         $this->validate();
+     
+         $this->project->update([
+             'general_data' => [
+                 'area' => $this->area,
+                 'objeto' => $this->objeto,
+                 'problema' => $this->problema,
+                 'solucion' => $this->solucion,
+                 'lugar' => $this->lugar,
+                 'tiempo' => $this->tiempo,
+             ],
+             'setup_step' => 2
+         ]);
+     
+         $this->step = 2;
+         
+         // Ahora sí tenemos el $aiService para pasarlo
+       //  $this->generateTitles($aiService); 
+     }
+
+     public function saveStep2()
+     {
+         $this->validate([
+             'title' => 'required|min:10' 
+         ], [
+             'title.required' => 'Debes seleccionar o escribir un título para tu investigación.',
+             'title.min' => 'El título es demasiado corto, debe tener al menos :min caracteres.', // <--- Agrega esto
+         ]);
+     
+         // IMPORTANTE: Recuperamos el JSON actual para no perder los títulos sugeridos
+         $currentData = $this->project->general_data ?? [];
+     
+         $this->project->update([
+             'title' => trim($this->title), // Guardamos el título oficial
+             'general_data' => array_merge($currentData, [
+                 // Mantenemos lo anterior y actualizamos lo nuevo
+                 'area' => $this->area,
+                 'objeto' => $this->objeto,
+                 'problema' => $this->problema,
+                 'solucion' => $this->solucion,
+                 'lugar' => $this->lugar,
+                 'tiempo' => $this->tiempo,
+                 'titulo_final' => trim($this->title), 
+             ]),
+             'setup_step' => 3
+         ]);
+     
+         $this->step = 3;
+         $this->loadFormatStructure();
+     }
+     
+     
+     public function generateTitles(\App\Services\Ai\AiWriterService $aiService)
+     {
+         $this->loading = true;
+     
+         // 1. Recuperar datos si las propiedades están vacías
+         if (empty($this->area) && $this->project->general_data) {
+             $gd = $this->project->general_data;
+             $this->area = $gd['area'] ?? '';
+             $this->objeto = $gd['objeto'] ?? '';
+             $this->problema = $gd['problema'] ?? '';
+             $this->solucion = $gd['solucion'] ?? '';
+             $this->lugar = $gd['lugar'] ?? '';
+             $this->tiempo = $gd['tiempo'] ?? '';
+         }
+     
+         // 2. Llamar a la IA (Gemini)
+         $titles = $aiService->suggestTitles([
+             'area'     => $this->area,
+             'objeto'   => $this->objeto,
+             'problema' => $this->problema,
+             'solucion' => $this->solucion,
+             'lugar'    => $this->lugar,
+             'tiempo'   => $this->tiempo,
+         ]);
+     
+         // 3. ACTUALIZACIÓN: Guardar los títulos dentro del JSON existente
+         $currentData = $this->project->general_data ?? [];
+         
+         // Agregamos o actualizamos la llave de los títulos sugeridos
+         $currentData['suggested_titles'] = $titles;
+     
+         $this->project->update([
+             'general_data' => $currentData
+         ]);
+     
+         // 4. Sincronizar la vista
+         $this->titleOptions = $titles;
+         $this->loading = false;
+     }
+
+         /**
+     * Muestra la confirmación de la finalización 
+     */
+    public function confirmFinishSetup()
+    {
+        
+        $this->dispatch('swal', [
+            'title'              => '¿Estás seguro que deseas finalizar?',
+            'text'               => 'No se podrá volver a los pasos anteriores una vez aceptado.',
+            'icon'               => 'warning',
+            'showCancelButton'   => true,
+            'confirmButtonText'  => 'Sí, Finalizar',
+            'confirmButtonColor' => '#465fff',
+            'onConfirm'          => 'confirmFinishSetup', // JS disparará este evento si se confirma
+        ]);
+
+    }
+ 
+    
+   #[On('confirmFinishSetup')] 
+   public function finishSetup()
+   {
+      
+       // 1. Verificación: si ya se completó el setup (paso 3), solo redirigimos
+       if ($this->project->setup_step >= 4) {
+           return redirect()->route('projects.show', $this->project->uuid);
+       }
+
+       // 3. Actualizamos el proyecto
+       $this->project->update([
+           'setup_step' => 4
+       ]);
+
+       // 4. CAMBIO CLAVE: Usamos steps() en lugar de chapters()
+       // Si no tiene pasos creados, los generamos
+       if ($this->project->steps()->count() === 0) {
+           $this->project->generateStructure(null, $this->formatSteps);
+       }
+   
+       return redirect()->route('projects.show', $this->project->uuid);
+   }
+
+    #[Layout('layouts.app')]
+    public function render()
+    {
+        return view('livewire.project.setup-project');
+    }
+}

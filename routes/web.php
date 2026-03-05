@@ -4,11 +4,41 @@ use Illuminate\Support\Facades\Route;
 use App\Actions\Fortify\DeleteUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\App;
+use App\Livewire\Admin\User\ManageUser;
+use App\Livewire\Admin\University\ManageUniversity;
+use App\Livewire\Project\ManageProject;
+use App\Livewire\Project\EditorProject;
+use App\Livewire\Classroom\ManageClassroom;
+use App\Livewire\Classroom\ManageClassroomSteps;
+use App\Livewire\Classroom\JoinClassroom;
+use App\Livewire\Dashboard\ManageDashboard;
+use App\Livewire\Classroom\ShowClassroom;
+use App\Livewire\Project\EditorProjectClassroom;
+use App\Livewire\Subscription\ManageSubscription;
+use App\Http\Controllers\Payment\IzipayController;
+use App\Livewire\Classroom\DashboardClassroom;
+use App\Livewire\Project\SetupProject;
+use App\Livewire\Payment\IzipayCheckout;
+use App\Http\Controllers\Project\ExportController;
+
+
+Route::get('lang/{locale}', function ($locale) {
+    if (in_array($locale, ['en', 'es'])) {
+        Session::put('locale', $locale);
+    }
+    return redirect()->back();
+});
+
 
 // 1. REDIRECCIÓN INICIAL
 Route::get('/', function () {
     return view('welcome');
 });
+
+// MUEVE ESTA LÍNEA FUERA DEL GRUPO Route::middleware(['auth'...])
+Route::get('/join/{code}', JoinClassroom::class)->name('classroom.autojoin');
 
 // 2. RUTAS PROTEGIDAS
 Route::middleware([
@@ -27,12 +57,61 @@ Route::middleware([
         return redirect('/login');
     })->name('user.destroy.manual');
 
-    // Dashboard
-    Route::get('/dashboard', function () {
-        return view('pages.dashboard.ecommerce', ['title' => 'InvestigaPro']);
-    })->name('dashboard');
+
+
+    Route::get('/dashboard', ManageDashboard::class)->name('dashboard');
+
+    // Ruta para la gestión de usuarios
+    Route::get('/admin/users', ManageUser::class)->name('admin.users');
+
+    // Ruta para la gestión de universidades
+    Route::get('/admin/university', ManageUniversity::class)->name('admin.university');
+    
+    // Ruta para la gestión projectos
+    Route::get('/project', ManageProject::class)->name('project');
+
+    // EDITOR: Donde el alumno redacta los 10 pasos
+    // URL: investigapro.test/investigaciones/550e8400-e29b-41d4-a716-446655440000
+    // Usamos {project:uuid} para que Laravel busque automáticamente por UUID
+    Route::get('/project/{project:uuid}', EditorProject::class)->name('projects.show');
+
+    Route::get('/proyectos/{project:uuid}/configuracion', SetupProject::class)->name('projects.setup');
+    
+    // Ruta para la gestión classrooom
+    Route::get('/classroom', ManageClassroom::class)->name('classroom');
+
+    // Ruta para la gestión subscripciones
+    Route::get('/subscription', ManageSubscription::class)->name('subscription');
+
+    // Ruta específica para que el alumno vea su aula y sus pasos
+    Route::get('/my-classroom/{classroom}', ShowClassroom::class)->name('student.classroom.show');
+
+    Route::get('/classroom/editor/{project:uuid}/{stepId?}', EditorProjectClassroom::class)
+    ->name('classroom.editor');
+
+    Route::get('/classroom/{classroom}', DashboardClassroom::class)
+    ->name('classroom.show')
+    ->middleware('auth');
+
+    Route::get('/projects/{project}/export-word', [ExportController::class, 'exportToWord'])->name('projects.export-word');
+
+    // Ruta para iniciar el proceso de pago
+    Route::get('/checkout/izipay/{payment:niubiz_order_id}', IzipayCheckout::class)
+    ->name('payment.izipay.checkout')
+    ->middleware('auth');
+
+    // Izipay usa una respuesta IPN (servidor a servidor) y una de retorno (cliente)
+    Route::post('/payment/izipay/result', [IzipayController::class, 'result'])
+        ->name('payment.izipay.result');
+
 
     // Calendario
+    Route::get('/calendar', function () {
+        return view('pages.calender', ['title' => 'Calendar']);
+    })->name('calendar');
+
+
+    // Usuarios
     Route::get('/calendar', function () {
         return view('pages.calender', ['title' => 'Calendar']);
     })->name('calendar');

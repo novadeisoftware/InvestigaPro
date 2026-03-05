@@ -81,37 +81,42 @@
             const savedTheme = localStorage.getItem('theme');
             const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             const theme = savedTheme || systemTheme;
+
+            // 1. Aplicamos a 'html' de inmediato (esto no falla porque ya existe el documentElement)
             if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
-                document.body.classList.add('dark', 'bg-gray-900');
             } else {
                 document.documentElement.classList.remove('dark');
-                document.body.classList.remove('dark', 'bg-gray-900');
             }
+
+            // 2. Esperamos a que el body exista para modificarlo
+            document.addEventListener('DOMContentLoaded', function() {
+                if (theme === 'dark') {
+                    document.body.classList.add('dark', 'bg-gray-900');
+                } else {
+                    document.body.classList.remove('dark', 'bg-gray-900');
+                }
+            });
         })();
     </script>
 </head>
 
-<body x-data="{ 'loaded': true}" x-init="$store.sidebar.isExpanded = window.innerWidth >= 1280;
-const checkMobile = () => {
-    if (window.innerWidth < 1280) {
-        $store.sidebar.setMobileOpen(false);
-        $store.sidebar.isExpanded = false;
-    } else {
-        $store.sidebar.isMobileOpen = false;
-        $store.sidebar.isExpanded = true;
-    }
-};
-window.addEventListener('resize', checkMobile);">
-
+<body 
+    x-data="{ loaded: true }" 
+    x-init="
+        $store.sidebar.isExpanded = window.innerWidth >= 1280;
+        {{-- Aquí puedes asegurar que se apague si Alpine tarda mucho --}}
+        setTimeout(() => loaded = false, 1000); 
+    "
+    class="antialiased"
+>
     {{-- preloader --}}
-    <x-common.preloader/>
-    {{-- preloader end --}}
+    <x-common.preloader />
 
     @yield('content')
 
+    @livewireScripts {{-- Asegúrate de que esto esté presente --}}
 </body>
-
 @stack('scripts')
 
 </html>

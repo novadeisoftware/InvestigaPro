@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->web(append: [
         \Illuminate\Session\Middleware\StartSession::class,
         \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \App\Http\Middleware\SetLocale::class,
     ]);
     
     $middleware->alias([
