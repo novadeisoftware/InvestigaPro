@@ -26,10 +26,10 @@ class UpaoSeeder extends Seeder
                             'pasos' => [
                                 ['orden' => 1, 'titulo' => 'I. Antecedentes', 'instrucciones' => 'Mínimo 5 internacionales y 5 nacionales (últimos 5 años).'],
                                 ['orden' => 2, 'titulo' => 'II. Marco Teórico', 'instrucciones' => 'Bases teóricas y científicas sustentadas.'],
-                                ['orden' => 3, 'titulo' => 'III. Problema', 'secciones' => ['Realidad Problemática', 'Enunciado del Problema']],
+                                ['orden' => 3, 'titulo' => 'III. Problema', 'secciones' => ['Realidad Problemática y Enunciado del Problema']],
                                 ['orden' => 4, 'titulo' => 'IV. Hipótesis', 'instrucciones' => 'Formulación de hipótesis general y específicas.'],
-                                ['orden' => 5, 'titulo' => 'V. Objetivos', 'secciones' => ['Objetivo General', 'Objetivos Específicos']],
-                                ['orden' => 6, 'titulo' => 'VI. Metodología', 'secciones' => ['Tipo y Diseño', 'Población y Muestra', 'Técnicas e Instrumentos']],
+                                ['orden' => 5, 'titulo' => 'V. Objetivos', 'secciones' => ['Objetivo General y Objetivos Específicos']],
+                                ['orden' => 6, 'titulo' => 'VI. Metodología', 'secciones' => ['Tipo , Diseño , Población , Muestra ,Técnicas e Instrumentos']],
                                 ['orden' => 7, 'titulo' => 'VII. Cronograma', 'tipo' => 'planeamiento'],
                                 ['orden' => 8, 'titulo' => 'VIII. Presupuesto', 'tipo' => 'planeamiento'],
                                 ['orden' => 9, 'titulo' => 'IX. Bibliografía', 'norma' => 'APA 7'],
