@@ -102,7 +102,7 @@ class SetupProject extends Component
      {
          $university = $this->project->university;
 
-         dd($university->reglas_json);
+       //  dd($university->reglas_json);
          if ($university && $university->reglas_json) {
              $reglas = $university->reglas_json;
              $keyBuscada = str_replace(' ', '_', strtoupper($this->selectedFormatKey));
