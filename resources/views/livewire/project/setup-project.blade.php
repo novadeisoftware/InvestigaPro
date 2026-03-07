@@ -101,7 +101,7 @@
         </aside>
 
         {{-- PANEL DERECHO: ÁREA DE TRABAJO --}}
-        <main class="flex-1 p-8 lg:p-8 items-center justify-center">
+        <main class="flex-1 p-8 lg:p-8 items-center justify-center dark:bg-gray-900">
 
             @if ($step == 1)
                 {{-- ETAPA 1: DATOS GENERALES --}}
