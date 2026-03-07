@@ -127,7 +127,7 @@ class Project extends Model
         if ($classroom && $classroom->classroomSteps()->exists()) {
             
             // Obtenemos el JSON base por si el docente dejó instrucciones vacías
-            $map = ['thesis_project' => 'PROYECTO DE TESIS', 'final_report' => 'INFORME FINAL'];
+            $map = ['thesis_project' => 'proyecto_tesis', 'final_report' => 'informe_final'];
             $jsonKey = $map[$this->document_type] ?? $this->document_type;
             $baseFormat = $this->university->reglas_json['formatos'][$jsonKey]['pasos'] ?? [];
     
@@ -154,7 +154,7 @@ class Project extends Model
     
         // CAMINO B: El alumno está solo (Lógica actual del JSON)
         $rules = $this->university->reglas_json;
-        $map = ['thesis_project' => 'PROYECTO DE TESIS', 'final_report' => 'INFORME FINAL'];
+        $map = ['thesis_project' => 'proyecto_tesis', 'final_report' => 'informe_final'];
         $jsonKey = $map[$this->document_type] ?? $this->document_type;
         $format = $rules['formatos'][$jsonKey] ?? null;
     
