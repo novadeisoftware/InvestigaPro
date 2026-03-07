@@ -1,14 +1,17 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\University;
+use App\Models\UniversityConfig; // Asegúrate de tener este modelo
 
 class UpaoSeeder extends Seeder
 {
     public function run(): void
     {
-        University::create([
+        // 1. Creamos la Universidad
+        $university = University::create([
             'nombre' => 'Universidad Privada Antenor Orrego',
             'siglas' => 'UPAO',
             'logo_path' => 'universities/upao.png',
@@ -43,6 +46,20 @@ class UpaoSeeder extends Seeder
                     ]
                 ]
             ]
+        ]);
+
+        // 2. Juntamos la configuración para evitar el error de Integrity Constraint
+        UniversityConfig::create([
+            'university_id'    => $university->id,
+            'min_palabras'     => 5000,
+            'max_palabras'     => 40000,
+            'idioma'           => 'es',
+            'formato_cita'     => 'APA7',
+            'modo_avance'      => 'secuencial',
+            'requiere_asesor'  => true,  // Evita el error 1048
+            'requiere_revisor' => true,
+            'bloqueo_etapas'   => true,
+            'reglas_extra'     => json_encode([]),
         ]);
     }
 }
