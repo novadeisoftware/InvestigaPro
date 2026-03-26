@@ -329,9 +329,11 @@
                 branding: false,
                 promotion: false,
                 elementpath: false,
-                plugins: 'table lists image',
-                {{-- El estudiante SÍ tiene toolbar para corregir --}}
-                toolbar: 'undo redo | blocks | bold italic | bullist numlist | removeformat',
+              
+                // Agregamos 'table' a los plugins
+            plugins: 'table lists image advlist autolink link charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media wordcount',
+           // TOOLBAR POTENCIADO: Agregamos controles de tabla y alineación
+            toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | table | bullist numlist | removeformat',
                 
                 {{-- CONFIGURACIÓN CRÍTICA PARA RESALTADOS --}}
                 extended_valid_elements: 'span[class|style]', 
