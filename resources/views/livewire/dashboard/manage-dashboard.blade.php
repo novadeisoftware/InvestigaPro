@@ -28,13 +28,13 @@
                     </div>
 
                     <h3
-                        class="text-2xl font-black text-gray-900 dark:text-white uppercase italic mb-4 tracking-tighter">
+                        class="text-2xl font-black text-gray-900 dark:text-white uppercase  mb-4 t">
                         ¡Acceso Confirmado!
                     </h3>
 
                     <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mb-8 leading-relaxed">
                         Ya eres parte del aula <span
-                            class="text-brand-400 font-bold italic">{{ $classroom->name }}</span>.
+                            class="text-brand-400 font-bold ">{{ $classroom->name }}</span>.
                         Tu asesor <span
                             class="text-gray-900 dark:text-white font-bold">{{ $classroom->advisor->name }}</span> ya
                         habilitó los pasos para tu tesis.
@@ -43,13 +43,13 @@
                     <div class="flex flex-col gap-3">
                         {{-- Este botón actualiza joined_at y REDIRIGE --}}
                         <button wire:click="completeWelcome"
-                            class="w-full py-4 bg-brand-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-brand-500/30 hover:bg-brand-700 transition-all">
-                            Empezar mi Investigación ahora
+                            class="w-full py-4 bg-brand-600 text-white rounded-2xl font-black uppercase  text-[12px] shadow-lg shadow-brand-500/30 hover:bg-brand-700 transition-all">
+                            Empezar  ahora
                         </button>
 
                         {{-- Este botón solo actualiza joined_at y CIERRA el modal --}}
                         <button wire:click="closeOnly"
-                            class="text-[10px] font-black uppercase text-gray-400 hover:text-gray-600 tracking-widest">
+                            class="text-[12px] font-black uppercase text-gray-400 hover:text-gray-600">
                             Cerrar, solo dar un vistazo
                         </button>
                     </div>

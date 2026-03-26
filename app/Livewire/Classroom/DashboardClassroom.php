@@ -26,14 +26,13 @@ class DashboardClassroom extends Component
 
     public function render()
     {
-        // Buscamos los alumnos que pertenecen a esta aula
         $students = $this->classroom->users()
             ->where(function($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')
                       ->orWhere('email', 'like', '%' . $this->search . '%');
             })
             ->with(['projects' => function($q) {
-                // Traemos el proyecto de este aula específica
+                // Filtramos por el aula actual y traemos los conteos
                 $q->where('classroom_id', $this->classroom->id)
                   ->withCount('steps')
                   ->withCount(['steps as completed_steps' => function($sq) {
@@ -42,6 +41,8 @@ class DashboardClassroom extends Component
             }])
             ->paginate(10);
 
+  
+    
         return view('livewire.classroom.dashboard-classroom', [
             'students' => $students
         ])->layout('layouts.app');

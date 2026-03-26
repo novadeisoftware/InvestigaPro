@@ -5,11 +5,11 @@
     <div
         class="flex p-1.5 bg-gray-100 dark:bg-gray-800/50 rounded-2xl w-fit mb-4 border border-gray-200 dark:border-gray-700">
         <button wire:click="$set('tab', 'my_classrooms')"
-            class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {{ $tab === 'my_classrooms' ? 'bg-white dark:bg-gray-700 text-brand-400 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+            class="px-6 py-2.5 rounded-xl text-[12px] font-black uppercase transition-all {{ $tab === 'my_classrooms' ? 'bg-white dark:bg-gray-700 text-brand-400 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
             Aulas que Asesoro
         </button>
         <button wire:click="$set('tab', 'joined_classrooms')"
-            class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {{ $tab === 'joined_classrooms' ? 'bg-white dark:bg-gray-700 text-brand-400 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
+            class="px-6 py-2.5 rounded-xl text-[11px] font-black uppercase transition-all {{ $tab === 'joined_classrooms' ? 'bg-white dark:bg-gray-700 text-brand-400 shadow-sm' : 'text-gray-400 hover:text-gray-600' }}">
             Mis Clases (Alumno)
         </button>
     </div>
@@ -27,14 +27,12 @@
                 Nueva Aula Virtual
             </x-common.button-submit>
         @else
-            <div class="text-xs font-black uppercase tracking-widest text-gray-400 italic">
-                Aulas donde eres estudiante
-            </div>
+            <p class="text-sm text-gray-500 mt-2">Aulas donde eres estudiante</p>
         @endif
 
         <div class="relative w-full md:w-96">
             <input wire:model.live.debounce.300ms="search" type="text" placeholder="Buscar aula..."
-                class="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border-none rounded-2xl focus:ring-2 focus:ring-brand-500 dark:text-gray-200 text-sm shadow-sm">
+                class="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border rounded-2xl focus:ring-2 focus:ring-brand-500 dark:text-gray-200 text-sm shadow-sm">
             <div class="absolute left-4 top-3.5 text-gray-400">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" />
@@ -130,18 +128,17 @@
                     {{-- Contenedor del Icono --}}
                     <div
                         class="w-20 h-20 bg-brand-50 dark:bg-brand-900/20 rounded-3xl flex items-center justify-center mb-6 shadow-sm">
-                        <svg class="w-10 h-10 text-brand-500 opacity-80" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
+                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M4 5c-1.1046 0-2 .8954-2 2v9c0 1.1046.8954 2 2 2h16c1.1046 0 2-.8954 2-2V7c0-1.1046-.8954-2-2-2H4zm0 2h16v8H4V7zm3 12a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1z"
+                            fill="currentColor"></path>
+                    </svg>
                     </div>
 
                     {{-- Mensaje --}}
                     <div class="max-w-xs">
-                        <h3
-                            class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest mb-2 italic">
+                        <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase mb-2">
                             Sin aulas activas
                         </h3>
                         <p class="text-[13px] text-gray-400 font-medium leading-relaxed px-4">
@@ -166,21 +163,21 @@
                     </div>
 
                     <h3
-                        class="text-xl font-black text-gray-900 dark:text-white uppercase leading-tight group-hover:text-brand-400 transition-colors">
+                        class="text-xl font-black text-gray-900 dark:text-white uppercase leading-tight transition-colors">
                         {{ $joined->name }}
                     </h3>
 
-                    <p class="text-xs text-gray-400 mt-2 font-bold italic uppercase tracking-tighter">
+                    <p class="text-xs text-gray-400 mt-2 font-bold">
                         Asesor: {{ $joined->advisor->name }}
                     </p>
 
                     {{-- En la sección de GRID ALUMNO --}}
                     <div class="mt-8 pt-6 border-t border-gray-50 dark:border-gray-700">
-                        <button wire:click="enterEditor({{ $joined->id }})"
-                            class="block w-full text-center py-4 bg-gray-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-brand-600 transition-all shadow-xl shadow-gray-900/10">
-                            <span wire:loading.remove wire:target="enterEditor({{ $joined->id }})">Entrar a Redactar
+                        <button wire:click="enterSetup({{ $joined->id }})"
+                            class="block w-full text-center py-4 bg-gray-900 text-white text-[10px] font-black uppercase  rounded-2xl hover:bg-brand-600 transition-all shadow-xl shadow-gray-900/10">
+                            <span wire:loading.remove wire:target="enterSetup({{ $joined->id }})">Entrar a Redactar
                                 →</span>
-                            <span wire:loading wire:target="enterEditor({{ $joined->id }})">Preparando
+                            <span wire:loading wire:target="enterSetup({{ $joined->id }})">Preparando
                                 Tesis...</span>
                         </button>
                     </div>
@@ -202,12 +199,12 @@
 
                     {{-- Mensaje de Invitación --}}
                     <div class="max-w-xs">
-                        <h3
-                            class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest mb-2 italic">
+                        <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase mb-2">
                             ¿Listo para investigar?
                         </h3>
                         <p class="text-[13px] text-gray-400 font-medium leading-relaxed px-4">
-                            Aún no perteneces a ninguna aula virtual. Pide el código a tu asesor para empezar tu tesis
+                            Aún no perteneces a ninguna aula virtual. Pide el código a tu asesor para empezar tu
+                            investigación
                             hoy mismo.
                         </p>
                     </div>
@@ -238,41 +235,53 @@
             <div x-show="open && !loading" x-cloak>
                 <div class="mb-10 text-center md:text-left">
                     <h4 class="text-3xl font-black text-gray-900 dark:text-white">
-                        {{ $classroom_id ? 'Ajustes del Aula' : 'Iniciar Nueva Aula' }}</h4>
-                    <p class="text-sm text-gray-500 mt-2 italic uppercase font-bold tracking-widest">Configura tu
-                        espacio de asesoría</p>
+                        {{ $classroom_id ? 'Ajustes del Aula' : 'Nueva Aula' }}
+                    </h4>
+                    <p class="text-sm text-gray-500 mt-2">Configura los detalles de tu aula.</p>
                 </div>
                 <div class="space-y-6">
-                    <div>
-                        <label class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Nombre
-                            del Aula</label>
-                        <input wire:model="name" type="text" placeholder="..."
-                            class="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:bg-gray-800 dark:text-white outline-none">
+
+                    {{-- Nombre del Aula --}}
+                    <div class="space-y-1.5"> {{-- Un pequeño espacio constante entre elementos --}}
+                        {{-- Caso con Error (Automático) --}}
+                        <x-form.input.text label="Nombre del Aula" wire:model="name" for="name"
+                            :error="$errors->has('name')" />
                     </div>
-                    <div class="grid grid-cols-2 gap-6">
-                        <div>
-                            <label
-                                class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Universidad</label>
-                            <select wire:model="university_id"
-                                class="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:bg-gray-800 dark:text-white appearance-none cursor-pointer">
-                                <option value="">Seleccionar...</option>
-                                @foreach ($universities as $uni)
-                                    <option value="{{ $uni->id }}">{{ $uni->nombre }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @if ($classroom_id)
-                            <div>
-                                <label
-                                    class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Estado</label>
-                                <select wire:model="status"
-                                    class="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:bg-gray-800 dark:text-white appearance-none cursor-pointer">
-                                    <option value="active">Activa</option>
-                                    <option value="inactive">Inactiva</option>
-                                </select>
-                            </div>
-                        @endif
+
+                    {{-- Universidad --}}
+                    <div class="space-y-1.5"> {{-- Un pequeño espacio constante entre elementos --}}
+
+                        <x-form.input.select label="Universidad" wire:model="university_id" for="university_id"
+                            :error="$errors->has('university_id')">
+                            <option value="" class="dark:bg-gray-900">Seleccionar Universidad...</option>
+                            @foreach ($universities as $uni)
+                                <option value="{{ $uni->id }}" class="dark:bg-gray-900">{{ $uni->nombre }}
+                                </option>
+                            @endforeach
+                        </x-form.input.select>
+
                     </div>
+
+                    {{-- Tipo de Documento --}}
+                    <div class="space-y-1.5">
+                        <x-form.input.select label="Tipo de Documento a desarrollar" wire:model.live="document_type"
+                            for="document_type" :error="$errors->has('document_type')">
+                            <option value="" class="dark:bg-gray-900">Seleccionar Tipo de Documento...</option>
+                            <option value="PROYECTO DE TESIS">Proyecto de Tesis</option>
+                            <option value="INFORME FINAL">Informe Final</option>
+                        </x-form.input.select>
+                    </div>
+
+                    @if ($classroom_id)
+                        <x-form.input.select label="Estado" wire:model="status" for="status" :error="$errors->has('status')">
+                            <option value="active">Activa</option>
+                            <option value="inactive">Inactiva</option>
+                        </x-form.input.select>
+                    @endif
+
+
+
+
                 </div>
                 <div class="flex items-center justify-end gap-4 pt-10 mt-6">
                     <button type="button" @click="open = false"

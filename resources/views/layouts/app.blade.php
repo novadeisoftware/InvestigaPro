@@ -11,6 +11,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 
+    <x-head.tinymce-config/>
+        
+
+
+
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.store('theme', {
@@ -88,7 +93,7 @@
 };
 window.addEventListener('resize', checkMobile);
 $store.theme.init();
-{{-- Sincroniza el body al cargar --}}">
+ {{-- Sincroniza el body al cargar --}}">
 
     <x-common.preloader />
 
@@ -146,7 +151,7 @@ $store.theme.init();
                 toast: true,
                 position: data.position || 'bottom-end',
                 showConfirmButton: false,
-                timer: data.timer || 3000,
+                timer: data.timer || 5000,
                 timerProgressBar: true,
                 background: bgColor,
                 color: textColor,

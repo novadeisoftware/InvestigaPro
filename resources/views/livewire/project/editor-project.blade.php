@@ -1,9 +1,17 @@
-<div class="flex bg-[#F3F4F6] dark:bg-gray-950 overflow-hidden" x-data="{ leftSidebar: false, rightSidebar: false }">
+<div class="flex bg-[#F3F4F6] dark:bg-gray-950 overflow-hidden" x-data="{ leftSidebar: false, rightSidebar: false, loading: false }"
+    x-on:draft-generated.window="loading = false" class="relative">
+  
+
+    {{-- LOADER GLOBAL (Debe estar AQUÍ adentro para que x-show="loading" funcione) --}}
+    <x-common.loader text="Redactando..." />
 
     @if ($viewMode === 'editor')
+        <x-common.preloader />
         <div x-show="leftSidebar || rightSidebar" @click="leftSidebar = false; rightSidebar = false"
             class="fixed inset-0 bg-black/50 z-40 lg:hidden" x-transition></div>
 
+        
+         {{-- ASIDE IZQUIERDO: PASOS DEL AULA --}}
         <aside :class="leftSidebar ? 'translate-x-0' : '-translate-x-full'"
             class="fixed inset-y-0 left-0 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-xl z-50 transition-transform duration-300 lg:relative lg:translate-x-0">
             {{-- HEADER: TÍTULO Y ESTADO (SOLO LECTURA) --}}
@@ -288,102 +296,95 @@
                             @break
 
                             @default
-                                <div wire:ignore wire:key="quill-editor-{{ $currentStepId }}" x-data="{
-                                    content: @entangle('content'),
-                                    init() {
-                                        // REGISTRAMOS SOLO LOS FORMATOS QUE QUEREMOS PERMITIR
-                                        const quill = new Quill($refs.editor, {
-                                            theme: 'snow',
-                                            placeholder: 'Escribe el desarrollo aquí...',
-                                            formats: [
-                                                'header', 'bold', 'italic', 'underline', 'list', 'bullet', 'align'
-                                            ],
-                                            modules: {
-                                                toolbar: [
-                                                    // LIMITAMOS SOLO A NIVEL 2 Y 3
-                                                    [{ 'header': [2, 3, false] }],
-                                                    ['bold', 'italic', 'underline'],
-                                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                                    [{ 'align': [] }],
-                                                    ['clean']
-                                                ]
-                                            }
-                                        });
-                                
-                                        quill.root.innerHTML = this.content;
-                                
-                                        quill.on('text-change', () => {
-                                            this.content = quill.root.innerHTML;
-                                        });
-                                
-                                        $watch('content', value => {
-                                            if (value !== quill.root.innerHTML) {
-                                                quill.root.innerHTML = value || '';
-                                            }
-                                        });
-                                    }
-                                }">
+                            <div wire:ignore wire:key="wrapper-{{ $currentStepId }}" x-data="{
+    content: @entangle('content').live,
+    
+    runParafraseo() {
+        let editor = tinymce.get('tinymce-editor');
+        if (!editor) return;
+        let selectedText = editor.selection.getContent({ format: 'text' });
+        
+        if (selectedText.trim().length < 5) {
+            Swal.fire({
+                title: '¿Qué texto parafraseamos?',
+                text: 'Por favor, sombrea con el mouse el párrafo que deseas mejorar.',
+                icon: 'info',
+                confirmButtonColor: '#4F46E5',
+                customClass: { popup: 'rounded-[2rem]' }
+            });
+            return;
+        }
+        this.$wire.paraphraseSelection(selectedText);
+    },
 
-                                    <div x-ref="editor"
-                                        class="w-full max-h-[800px] text-[15px] lg:text-[16px] leading-[1.8] text-gray-700 dark:text-gray-300 font-serif border-none">
-                                    </div>
-                                </div>
+    initTiny() {
+        if (window.tinymce) { tinymce.remove(); }
 
-                                <style>
-                                    /* 1. Definir el contenedor principal como un flex de alto completo */
-                                    [wire\:ignore] {
-                                        display: flex;
-                                        flex-direction: column;
-                                        height: 55vh;
-                                        /* Ocupa el 85% del alto de la pantalla, ajustable según tu layout */
-                                        min-height: 500px;
-                                    }
+        setTimeout(() => {
+            tinymce.init({
+                selector: '#tinymce-editor',
+                height: 690,
+                language: 'es',
+                menubar: false,
+                branding: false,
+                promotion: false,
+                elementpath: false,
+                plugins: 'table lists image',
+                {{-- El estudiante SÍ tiene toolbar para corregir --}}
+                toolbar: 'undo redo | blocks | bold italic | bullist numlist | removeformat',
+                
+                {{-- CONFIGURACIÓN CRÍTICA PARA RESALTADOS --}}
+                extended_valid_elements: 'span[class|style]', 
+                entity_encoding: 'raw',
+                verify_html: false,
 
-                                    /* 2. Estilo del Toolbar */
-                                    .ql-toolbar.ql-snow {
-                                        border: none !important;
-                                        border-bottom: 1px solid #f3f4f6 !important;
-                                        padding: 0.75rem !important;
-                                        background: white;
-                                        flex-shrink: 0;
-                                        /* Evita que el toolbar se encoja */
-                                    }
+                {{-- Esto permite que el alumno vea los colores del asesor DENTRO del cuadro de texto --}}
+                content_style: `
+                    body { font-family:Inter,sans-serif; font-size:14px; color: #334155; }
+                    .highlight-error { background-color: #fee2e2; color: #991b1b; border-bottom: 2px solid #ef4444; border-radius: 4px; }
+                    .highlight-suggest { background-color: #fef08a; color: #854d0e; border-bottom: 2px dashed #ca8a04; border-radius: 4px; }
+                    .highlight-success { background-color: #dcfce7; color: #166534; border-bottom: 2px solid #22c55e; border-radius: 4px; }
+                    .ia-highlight { background-color: #f3e8ff; border-bottom: 2px solid #a855f7; border-radius: 4px; }
+                    span { padding: 0 2px; }
+                `,
 
-                                    .dark .ql-toolbar.ql-snow {
-                                        background: #111827;
-                                        border-bottom: 1px solid #374151 !important;
-                                    }
+                setup: (editor) => {
+                    editor.on('init', () => {
+                        editor.setContent(this.content || '');
+                    });
 
-                                    /* 3. Hacer que el contenedor de texto ocupe el resto del espacio */
-                                    .ql-container.ql-snow {
-                                        border: none !important;
-                                        font-family: 'Georgia', serif !important;
-                                        flex: 1;
-                                        /* Esto estira el editor hacia abajo */
-                                        display: flex;
-                                        flex-direction: column;
-                                        overflow: hidden;
-                                    }
+                    window.addEventListener('tinymce-load-content', (event) => {
+                        if (editor && editor.initialized) {
+                            editor.setContent(event.detail.content || '');
+                        }
+                    });
 
-                                    /* 4. Habilitar el scroll interno para el texto */
-                                    .ql-editor {
-                                        padding: 2rem !important;
-                                        flex: 1;
-                                        overflow-y: auto;
-                                        
-                                        /* Permite scroll solo en el contenido, no en toda la página */
-                                    }
+                    {{-- Receptor de IA: Inserta el texto nuevo con un color púrpura suave --}}
+                    window.addEventListener('tinymce-replace-selection', (event) => {
+                        if (editor && editor.initialized) {
+                            const html = `<span class='ia-highlight'>${event.detail.content}</span>`;
+                            editor.insertContent(html);
+                            this.content = editor.getContent();
+                        }
+                    });
 
-                                    /* Opcional: Hacer que se sienta como una hoja de papel infinita */
-                                    .ql-editor.ql-blank::before {
-                                        left: 2rem !important;
-                                        font-style: italic;
-                                        color: #9ca3af;
-                                    }
-                                </style>
+                    editor.on('Change KeyUp Undo Redo', () => {
+                        this.content = editor.getContent();
+                    });
 
-                                <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-                                <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+                    this.$watch('content', (value) => {
+                        if (editor && editor.initialized && value !== editor.getContent()) {
+                            editor.setContent(value || '');
+                        }
+                    });
+                }
+            });
+        }, 50);
+    }
+}" x-init="initTiny()" @trigger-paraphrase.window="runParafraseo()">
+    <textarea id="tinymce-editor" wire:ignore></textarea>
+</div>
+
                             </div>
                     @endswitch
                     {{-- Pie de página de la hoja para cerrar el diseño --}}
@@ -1262,48 +1263,59 @@
             </button>
         </div>
 
+          {{-- 
+            <div class="flex items-center justify-between px-2">
+                <h3 class="text-[15px]  text-gray-900 dark:text-white  leading-none">
+                    Feedback Asesoría</h3>
+                <span
+                    class="px-2 py-0.5 bg-brand-500 text-white text-[12px] font-black rounded-full shadow-lg">{{ count($comments) }}</span>
+            </div>--}}
+
         {{-- Cuerpo de Herramientas --}}
         <div class="flex-1 space-y-4 overflow-y-auto no-scrollbar">
             <p class="text-[12px] font-bold text-gray-600 uppercase mb-2">Herramientas de Redacción</p>
 
-            {{-- Botón: Generar Borrador --}}
-            <button wire:click="generateDraft" wire:loading.attr="disabled"
-                class="w-full p-5 bg-gray-50 dark:bg-gray-800/50 rounded-[2rem] text-left border-2 border-transparent hover:border-brand-500/20 hover:bg-white dark:hover:bg-gray-800 transition-all group relative overflow-hidden disabled:opacity-50 shadow-sm">
 
-                <div wire:loading.remove wire:target="generateDraft">
+            {{-- Botón: Generar Borrador --}}
+            <button wire:click="generateDraft" wire:loading.attr="disabled" x-on:click="loading = true"
+                {{-- Activa el loader full screen --}}
+                class="w-full p-5 bg-gray-50 dark:bg-gray-800/50 rounded-[2rem] text-left border-2 border-transparent hover:border-brand-500/20 hover:bg-white dark:hover:bg-gray-800 transition-all group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                {{-- Estado Normal (Controlado por Alpine) --}}
+                {{-- Se oculta suavemente cuando loading es true --}}
+                <div x-show="!loading" x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
                     <div class="flex items-center gap-2 mb-1">
                         <span
-                            class="text-sm font-black text-gray-600 dark:text-white group-hover:text-brand-200 transition-colors tracking-tight">✨
-                            Redactar Borrador</span>
+                            class="text-sm font-black text-gray-600 dark:text-white group-hover:text-gray-600 transition-colors tracking-tight">
+                            ✨ Redactar Borrador
+                        </span>
                     </div>
-                    <p class="text-[12px] text-gray-400 leading-relaxed font-medium">Genera contenido académico
-                        base
-                        para este paso.</p>
+                    <p class="text-[12px] text-gray-400 leading-relaxed font-medium">
+                        Genera contenido académico base para este paso.
+                    </p>
                 </div>
 
-                {{-- Loader Animado --}}
-                <div wire:loading wire:target="generateDraft" class="flex flex-col items-center py-2 space-y-3">
-                    <div class="flex space-x-1.5">
-                        <div class="w-2 h-2 bg-brand-600 rounded-full animate-bounce [animation-delay:-0.3s]">
-                        </div>
-                        <div class="w-2 h-2 bg-brand-600 rounded-full animate-bounce [animation-delay:-0.15s]">
-                        </div>
-                        <div class="w-2 h-2 bg-brand-600 rounded-full animate-bounce"></div>
-                    </div>
-                    <p class="text-[10px] font-black text-brand-600 uppercase tracking-widest">IA está
-                        pensando...</p>
-                </div>
             </button>
 
-            {{-- Botón: Parafrasear (Próximamente) --}}
-            <button disabled
-                class="w-full p-5 bg-gray-50/50 dark:bg-gray-800/30 rounded-[2rem] text-left border-2 border-dashed border-gray-200 dark:border-gray-700 opacity-60 cursor-not-allowed group">
-                <div class="flex items-center gap-2">
-                    <p class="text-xs font-black text-gray-400 dark:text-gray-500">📝 Parafrasear APA 7</p>
-                    <span
-                        class="text-[8px] bg-gray-200 dark:bg-gray-700 text-gray-500 px-1.5 py-0.5 rounded uppercase font-bold">Lock</span>
+
+
+            {{-- Botón: Parafrasear (Corregido con Loader Sólido) --}}
+            <button type="button" {{-- 1. Prendemos el loader global y 2. Mandamos la señal a Livewire/TinyMCE --}}
+                @click="loading = true; $dispatch('trigger-paraphrase')" wire:loading.attr="disabled"
+                class="w-full p-5 bg-gray-50 dark:bg-gray-800/50 rounded-[2rem] text-left border-2 border-transparent hover:border-brand-500/20 hover:bg-white dark:hover:bg-gray-800 transition-all group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                {{-- Estado Normal --}}
+                <div x-show="!loading" x-transition:leave="transition ease-in duration-150 opacity-0">
+                    <div class="flex items-center gap-2">
+                        <p
+                            class="text-sm font-black text-gray-600 dark:text-white group-hover:text-gray-600 transition-colors tracking-tight">
+                            📝 Parafrasear APA 7
+                        </p>
+                    </div>
+                    <p class="text-[12px] text-gray-400 leading-relaxed font-medium">
+                        Selecciona un texto en el editor y haz clic aquí para transformarlo.
+                    </p>
                 </div>
-                <p class="text-[10px] text-gray-400 mt-1 italic">Próximamente disponible</p>
+
             </button>
 
             {{-- Widget de Consumo (Sticky bottom) --}}
@@ -2195,14 +2207,17 @@
                                 </div>
                             </div>
                             {{-- HOJAS DE CONTENIDO (ARIAL 12) --}}
+                            {{-- HOJAS DE CONTENIDO (ARIAL 12) --}}
                             @foreach ($project->steps->sortBy('order') as $step)
                                 <div id="step-{{ $step->id }}"
-                                    class="document-page shadow-2xl shrink-0 h-fit min-h-[29.7cm] font-sans animate-in slide-in-from-bottom-10 duration-700">
+                                    class="document-page shadow-2xl shrink-0 font-sans animate-in slide-in-from-bottom-10 duration-700">
+
+                                    {{-- Título del Paso --}}
                                     <h3 class="text-[12pt] font-bold uppercase mb-12 text-center text-gray-900">
                                         {{ $step->order }}. {{ $step->title }}
                                     </h3>
 
-                                    <div class="academic-body prose-none text-justify text-[12pt] text-gray-800">
+                                    <div class="academic-body text-justify text-[12pt] text-gray-800">
                                         @php
                                             $data = json_decode($step->content, true);
                                             $isTable =
@@ -2211,15 +2226,19 @@
                                         @endphp
 
                                         @if ($isTable && is_array($data))
-                                            @include(
-                                                'livewire.project.partials.' .
-                                                    (str_contains(strtolower($step->title), 'cronograma')
-                                                        ? 'preview-cronograma'
-                                                        : 'preview-presupuesto'),
-                                                ['data' => $data]
-                                            )
+                                            {{-- Tablas manuales --}}
+                                            <div class="break-inside-avoid">
+                                                @include(
+                                                    'livewire.project.partials.' .
+                                                        (str_contains(strtolower($step->title), 'cronograma')
+                                                            ? 'preview-cronograma'
+                                                            : 'preview-presupuesto'),
+                                                    ['data' => $data]
+                                                )
+                                            </div>
                                         @else
-                                            <div class="academic-text-wrapper font-sans">
+                                            {{-- Contenido de TinyMCE --}}
+                                            <div class="academic-text-wrapper">
                                                 {!! $step->content !!}
                                             </div>
                                         @endif
@@ -2286,6 +2305,28 @@
         margin-top: 1rem;
         margin-bottom: 1rem;
         line-height: 1.2;
+    }
+
+    /* Estilos para el visor de documentos de JirehLux */
+    .academic-text-wrapper table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-bottom: 1.5rem;
+        background-color: transparent;
+    }
+
+    .academic-text-wrapper table td,
+    .academic-text-wrapper table th {
+        border: 1px solid #000000 !important;
+        /* Bordes negros para tesis */
+        padding: 8px 12px;
+        vertical-align: top;
+    }
+
+    /* Espaciado para los párrafos que vienen con la tabla */
+    .academic-text-wrapper p {
+        margin-bottom: 1rem;
+        line-height: 1.6;
     }
 
     /* 5. Navegación (Sidebar) */

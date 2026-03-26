@@ -17,7 +17,7 @@ class ManageClassroom extends Component
     use WithPagination;
 
     // Propiedades para el formulario y búsqueda
-    public $classroom_id, $name, $university_id, $status = 'active';
+    public $classroom_id, $name, $university_id, $status = 'active',$document_type;
     public $search = '';
 
     // propiedad para tabs
@@ -32,10 +32,26 @@ class ManageClassroom extends Component
     {
         return [
             'name' => 'required|string|min:5|max:100',
+            'document_type' => 'required',
             'university_id' => 'required|exists:universities,id',
             'status' => 'required|in:active,inactive,archived',
         ];
     }
+
+    protected $validationAttributes = [
+        'name' => 'Nombre',
+        'document_type' => 'Tipo de Documento',
+        'university_id' => 'Universidad',
+        'status' => 'Estado',
+    ];
+    
+    protected $messages = [
+         'name.required' => 'Nombre es obligatorio.',
+         'status.min' => 'Debes seleccionar un estado',
+         'university_id.required' => 'Debes seleccionar una universidad',
+         'document_type.required' => 'Debes seleccionar un tipo de documento',
+    
+     ];
 
     public function mount()
     {
@@ -82,6 +98,7 @@ class ManageClassroom extends Component
      */
     public function edit(Classroom $classroom)
     {
+        $this->resetFields();
         $this->classroom_id = $classroom->id;
         $this->name = $classroom->name;
         $this->university_id = $classroom->university_id;
@@ -91,36 +108,49 @@ class ManageClassroom extends Component
     }
 
     // Añade este método a tu clase ManageClassroom
-public function enterEditor($classroomId)
-{
-    $classroom = Classroom::find($classroomId);
-    
-    $project = Project::firstOrCreate(
-        ['classroom_id' => $classroomId, 'user_id' => auth()->id()],
-        [
-            'uuid' => (string) Str::uuid(),
-            'university_id' => $classroom->university_id,
-            'title' => 'Tesis: ' . $classroom->name,
-            'document_type' => 'proyecto_tesis',
-        ]
-    );
+   public function enterSetup($classroomId)
+   {
+       // Buscamos el aula
+       $classroom = Classroom::with('classroomSteps')->findOrFail($classroomId);
+   
+       // Buscamos o creamos el proyecto
+       $project = Project::firstOrCreate(
+           ['classroom_id' => $classroomId, 'user_id' => auth()->id()],
+           [
+               'uuid'          => (string) \Illuminate\Support\Str::uuid(),
+               'university_id' => $classroom->university_id,
+               'title'         => 'Tesis: ' . $classroom->name,
+               'document_type' => $classroom->document_type,
+               'setup_step'    => 1, // Inicia en el paso 1 por defecto
+           ]
+       );
+   
+       // Si es nuevo, clonamos los pasos del aula
+       if ($project->steps()->count() === 0) {
+           foreach ($classroom->classroomSteps as $cStep) {
+               \App\Models\ProjectStep::create([
+                   'project_id'        => $project->id,
+                   'classroom_step_id' => $cStep->id,
+                   'order'             => $cStep->order,
+                   'title'             => $cStep->custom_name ?? $cStep->step_key,
+                   'content'           => '',
+                   'status'            => 'pending'
+               ]);
+           }
+       }
+   
+       /** * Lógica de Redirección Dinámica:
+        * Si setup_step es menor a 3, significa que la configuración está pendiente.
+        */
+       if ($project->setup_step < 4) {
+           return redirect()->route('projects.setup', ['project' => $project->uuid]);
+       }
+   
+       // Si ya completó el setup (paso 3), va al editor normal
+       return redirect()->route('projects.show', ['project' => $project->uuid]);
+   }
 
-    // SI EL PROYECTO ES NUEVO, LE COPIAMOS LOS PASOS DEL AULA
-    if ($project->steps()->count() === 0) {
-        foreach ($classroom->classroomSteps as $cStep) {
-            ProjectStep::create([
-                'project_id' => $project->id,
-                'classroom_step_id' => $cStep->id, // <--- Importante añadir esta FK
-                'order' => $cStep->order,
-                'title' => $cStep->custom_name ?? $cStep->step_key,
-                'content' => '',
-                'status' => 'pending'
-            ]);
-        }
-    }
 
-    return redirect()->route('classroom.editor', ['project' => $project->uuid]);
-}
     /**
      * Guarda o actualiza el aula.
      */
@@ -136,6 +166,7 @@ public function enterEditor($classroomId)
             'name'          => $this->name,
             'university_id' => $this->university_id,
             'advisor_id'    => auth()->id(),
+            'document_type' => $this->document_type,
             'status'        => $this->status,
         ];
     
@@ -172,17 +203,29 @@ public function enterEditor($classroomId)
     {
         $rules = $classroom->university->reglas_json;
         
-        // Por defecto usamos el formato de proyecto de tesis
-        $pasos = $rules['formatos']['proyecto_tesis']['pasos'] ?? [];
-
+        /** * Mapeo exacto para tu nuevo JSON:
+         * Convertimos el document_type del modelo a las llaves del JSON.
+         */
+        $map = [
+            'thesis_project' => 'PROYECTO_DE_TESIS',
+            'final_report'   => 'INFORME_FINAL'
+        ];
+    
+        $jsonKey = $map[$classroom->document_type] ?? 'PROYECTO_DE_TESIS';
+        
+        // Accedemos a los pasos según tu estructura: formatos -> LLAVE -> pasos
+        $pasos = $rules['formatos'][$jsonKey]['pasos'] ?? [];
+    
         foreach ($pasos as $paso) {
-            // Suponiendo que ya creaste el modelo ClassroomStep
             ClassroomStep::create([
-                'classroom_id' => $classroom->id,
-                'step_key' => $paso['key'] ?? Str::slug($paso['titulo']),
-                'order' => $paso['orden'],
-                'custom_name' => $paso['titulo'], // El asesor podrá cambiarlo después
-                'availability_mode' => 'open', // Por defecto todos abiertos
+                'classroom_id'      => $classroom->id,
+                // Usamos la 'key' si existe, si no, generamos un slug del título
+                'step_key'          => $paso['key'] ?? Str::slug($paso['titulo'], '_'),
+                'order'             => $paso['orden'],
+                'custom_name'       => $paso['titulo'], 
+                'availability_mode' => 'open', 
+                // Guardamos instrucciones y secciones si vienen en el JSON
+                'additional_instructions' => $paso['instrucciones'] ?? null,
             ]);
         }
     }

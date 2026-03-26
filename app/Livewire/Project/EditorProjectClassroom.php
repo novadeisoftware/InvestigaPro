@@ -119,6 +119,36 @@ class EditorProjectClassroom extends Component
         }
     }
 
+    /**
+     * MÉTODO PARA GUARDAR EL RESALTADO DEL ASESOR
+     * Recibe el contenido COMPLETO del editor desde JS para asegurar sincronía
+     */
+    public function updateContentFromAdvisor($newContent)
+    {
+    
+        // Solo el asesor puede usar esta vía de guardado forzado
+        if (!$this->isReadOnly || !$this->currentStepId) return;
+
+        $this->content = $newContent;
+
+        $step = ProjectStep::find($this->currentStepId);
+        if ($step) {
+            $step->update([
+                'content' => $this->content
+            ]);
+
+            $this->lastSaved = now()->format('h:i A');
+
+            // Opcional: Notificamos éxito silencioso
+            $this->dispatch('swal', [
+                'type'     => 'toast',
+                'title'    => 'Marca guardada en el proyecto',
+                'icon'     => 'success',
+                'position' => 'bottom-end',
+            ]);
+        }
+    }
+
     public function saveProgress()
     {
         // BLOQUEO CRÍTICO: No guardar si es asesor o si el contenido es null por error de sincronización

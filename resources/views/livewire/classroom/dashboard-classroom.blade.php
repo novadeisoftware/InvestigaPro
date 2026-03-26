@@ -1,44 +1,44 @@
 <div class="p-8 max-w-full mx-auto space-y-8 animate-fade-in">
 
     {{-- Navegación Estilo Breadcrumb Premium --}}
-    <nav class="flex items-center gap-4 text-xs font-black uppercase tracking-widest italic">
+    <nav class="flex items-center gap-4 text-xs font-black uppercase">
         <a href="{{ route('classroom') }}"
-            class="text-gray-400 hover:text-brand-400 transition-colors flex items-center gap-2">
+            class="text-gray-400 hover:text-brand-500 transition-colors flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                     stroke-width="2.5" />
             </svg>
-            Mis Aulas
+            Mis Aulas Virtuales
         </a>
         <span class="text-gray-300">/</span>
-        <span class="text-brand-400 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <span class="text-brand-500 flex items-center gap-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    stroke-width="2.5" />
+                    d="M4 5c-1.1046 0-2 .8954-2 2v9c0 1.1046.8954 2 2 2h16c1.1046 0 2-.8954 2-2V7c0-1.1046-.8954-2-2-2H4zm0 2h16v8H4V7zm3 12a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1z"
+                    fill="currentColor"></path>
             </svg>
-            Panel de Control: {{ $classroom->name }}
+            {{ $classroom->name }}
         </span>
     </nav>
-
-    {{-- Hero Section Reducido --}}
-    <div
-        class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-700 shadow-xl shadow-brand-500/5">
+    {{-- Hero Section Reducido con Botón de Copia Integrado --}}
+    <div class="relative overflow-hidden rounded-[2.5rem] p-2 mb-8">
         <div class="relative flex flex-col md:flex-row justify-between items-center gap-6">
+
+            {{-- Info del Aula (Izquierda) --}}
             <div class="flex items-center gap-6">
                 <div
-                    class="w-16 h-16 bg-brand-400 rounded-3xl flex items-center justify-center text-white shadow-lg shadow-brand-400/20">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="w-16 h-16 bg-brand-500 rounded-3xl flex items-center justify-center text-white shadow-lg shadow-brand-400/20">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
                         <path
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                            stroke-width="1.5" />
+                            d="M4 5c-1.1046 0-2 .8954-2 2v9c0 1.1046.8954 2 2 2h16c1.1046 0 2-.8954 2-2V7c0-1.1046-.8954-2-2-2H4zm0 2h16v8H4V7zm3 12a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1z"
+                            fill="currentColor"></path>
                     </svg>
                 </div>
                 <div>
-                    <h2
-                        class="text-3xl font-black text-gray-900 dark:text-white uppercase italic tracking-tighter leading-none">
-                        Gestión <span class="text-brand-400">Pro</span>
+                    <h2 class="text-3xl font-black text-gray-900 dark:text-white uppercase">
+                        {{ $classroom->name }}
                     </h2>
                     <p class="text-gray-400 text-[9px] font-bold uppercase mt-1 tracking-widest leading-none">
                         {{ $classroom->university->siglas }} • {{ $students->total() }} Investigadores
@@ -46,168 +46,146 @@
                 </div>
             </div>
 
-            {{-- Invitation Code Compact --}}
-            <div class="flex items-center gap-4 bg-gray-50 dark:bg-gray-900 px-6 py-3 rounded-2xl border border-gray-100 dark:border-gray-700 group cursor-pointer"
-                @click="navigator.clipboard.writeText('{{ $classroom->invitation_code }}'); $dispatch('swal', {title: 'Código Copiado', icon: 'success', type: 'toast'})">
-                <div class="text-right">
-                    <span
-                        class="text-[7px] font-black text-gray-400 uppercase block tracking-tighter leading-none italic">Click
-                        para copiar</span>
-                    <span
-                        class="text-xl font-mono font-black text-brand-400 leading-none tracking-tight">{{ $classroom->invitation_code }}</span>
-                </div>
-                <div
-                    class="p-2 bg-white dark:bg-gray-800 rounded-lg text-gray-400 group-hover:text-brand-400 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            stroke-width="2" />
-                    </svg>
+            {{-- Botón de Invitación Estilo Compacto (Derecha) --}}
+            <div x-data="{ copied: false }" class="relative">
+                <div class="flex flex-col items-center md:items-end gap-2">
+                    <span class="text-[12px] text-gray-400">Click para copiar
+                        código</span>
+
+                    <button
+                        @click="navigator.clipboard.writeText('{{ route('classroom.autojoin', $classroom->invitation_code) }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                        class="group flex items-center gap-4 bg-gray-50 dark:bg-gray-900/50 px-6 py-3 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-700 hover:border-brand-400 transition-all active:scale-95">
+
+                        <span class="font-mono text-lg text-brand-500 font-black tracking-widest"
+                            :class="copied ? 'text-green-500' : 'text-brand-500'">
+                            {{ $classroom->invitation_code }}
+                        </span>
+
+                        <div
+                            class="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm group-hover:bg-brand-500 group-hover:text-white transition-colors">
+                            {{-- Icono de Copiar --}}
+                            <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                            </svg>
+                            {{-- Icono de Check (Copiado) --}}
+                            <svg x-show="copied" class="w-4 h-4 text-green-500 group-hover:text-white" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                    </button>
                 </div>
             </div>
+
         </div>
     </div>
+
     {{-- Buscador y Filtros Rápidos --}}
-    <div class="flex flex-col md:flex-row gap-4 items-center">
-        <div class="relative w-full md:flex-1">
+    <div class="flex flex-col md:flex-row md:items-center justify-end gap-6">
+        <div class="relative w-full md:w-96">
             <input wire:model.live.debounce.300ms="search" type="text"
-                placeholder="Escribe el nombre del investigador o su correo..."
-                class="w-full pl-14 pr-4 py-5 bg-white dark:bg-gray-800 border-none rounded-[2rem] focus:ring-2 focus:ring-brand-400 dark:text-gray-200 text-sm shadow-xl shadow-gray-200/50 dark:shadow-none italic font-medium">
-            <div class="absolute left-5 top-5 text-brand-400">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="3" />
+                placeholder="Buscar estudiante por nombre o correo..."
+                class="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border rounded-2xl focus:ring-2 focus:ring-brand-500 dark:text-gray-200 text-sm shadow-sm">
+            <div class="absolute left-4 top-3.5 text-gray-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" />
                 </svg>
             </div>
         </div>
-        {{-- <div class="flex gap-2">
-            <button
-                class="px-6 py-5 bg-white dark:bg-gray-800 text-gray-400 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:text-brand-400 transition-all shadow-md">Exportar
-                Notas</button>
-        </div> --}}
     </div>
 
-    {{-- Lista de Alumnos Estilo Kanban/List --}}
-    <div class="grid grid-cols-1 gap-6">
+
+    <div class="grid grid-cols-1 gap-4 w-full">
         @forelse($students as $student)
             @php
                 $project = $student->projects->first();
-                $percent =
-                    $project && $project->steps_count > 0
-                        ? ($project->completed_steps / $project->steps_count) * 100
-                        : 0;
+                $totalSteps = $project->steps_count ?? 0;
+                $completedSteps = $project->completed_steps ?? 0;
+                $percent = $totalSteps > 0 ? ($completedSteps / $totalSteps) * 100 : 0;
             @endphp
 
             <div
-                class="group relative bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-2xl hover:border-brand-400/30 transition-all duration-500 overflow-hidden">
+                class="group relative bg-white dark:bg-gray-800 rounded-[2rem] px-8 py-5 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 w-full">
+                <div class="flex flex-row items-center justify-between gap-8 w-full">
 
-                {{-- Decoración de Card --}}
-                <div
-                    class="absolute top-0 right-0 w-32 h-32 bg-brand-400/5 rounded-full -mr-16 -mt-16 group-hover:bg-brand-400/10 transition-colors">
-                </div>
-
-                <div class="relative flex flex-col md:flex-row items-center gap-8">
-                    {{-- Perfil del Alumno con Foto de Jetstream --}}
-                    <div class="flex items-center gap-6 w-full md:w-1/3">
-                        <div class="relative">
-                            {{-- Contenedor de la Foto con Estilo MSHO --}}
-                            <div
-                                class="w-16 h-16 p-1 bg-gradient-to-br from-brand-400 to-brand-600 rounded-[1.5rem] shadow-2xl group-hover:rotate-6 transition-transform duration-500">
+                    {{-- 1. NOMBRE Y PERFIL (Ancho controlado) --}}
+                    <div class="flex items-center gap-4 w-[250px] flex-shrink-0">
+                        <div class="relative flex-shrink-0">
+                            <div class="w-12 h-12 p-0.5 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full">
                                 <div
-                                    class="w-full h-full overflow-hidden rounded-[1.2rem] border-2 border-white dark:border-gray-800">
-                                    {{-- Foto de perfil de Jetstream (Muestra iniciales automáticamente si no hay foto) --}}
+                                    class="w-full h-full overflow-hidden rounded-full border-2 border-white dark:border-gray-800">
                                     <img src="{{ $student->profile_photo_url }}" alt="{{ $student->name }}"
                                         class="object-cover w-full h-full bg-gray-900" />
                                 </div>
                             </div>
-
-                            {{-- Indicador de Estado (Online/Activo) --}}
                             <span
-                                class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-4 border-white dark:border-gray-800 rounded-full shadow-lg"></span>
+                                class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></span>
                         </div>
-
-                        <div class="overflow-hidden">
+                        <div class="truncate">
                             <h4
-                                class="font-black text-xl text-gray-900 dark:text-white uppercase italic tracking-tighter truncate group-hover:text-brand-400 transition-colors">
-                                {{ $student->name }}
+                                class="font-black text-sm text-gray-900 dark:text-white uppercase truncate leading-tight">
+                                {{ $student->name }} {{ $student->last_name }}
                             </h4>
-                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1 italic">
-                                Investigador Jr.
+                            <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Investigador
                             </p>
                         </div>
                     </div>
 
-                    {{-- Data de Avance --}}
-                    <div class="w-full md:flex-1">
+                    {{-- 2. TÍTULO DEL PROYECTO (Flexible) --}}
+                    <div
+                        class="flex-1 flex flex-col justify-center border-l border-gray-100 dark:border-gray-700 px-6 overflow-hidden">
+                        <span class="text-[11px] font-black uppercase text-brand-500 mb-1">Proyecto</span>
+                        <h5 class="text-[11px] font-medium text-gray-500 dark:text-gray-400 truncate">
+                            {{ $project->title ?? 'Sin título registrado' }}
+                        </h5>
+                    </div>
+
+                    {{-- 3. AVANCE (MÁS ANCHO: flex-[1.2]) --}}
+                    <div class="flex-[1.2] min-w-[250px] px-6 border-l border-gray-50 dark:border-gray-700/50">
                         @if ($project)
-                            <div class="flex justify-between items-end mb-3">
+                            <div class="flex justify-between items-end mb-1.5">
                                 <div class="flex flex-col">
                                     <span
-                                        class="text-[8px] font-black uppercase text-gray-400 tracking-[0.2em] italic">Capítulos
-                                        Completados</span>
-                                    <span
-                                        class="text-xs font-black text-gray-900 dark:text-gray-200 uppercase mt-1 italic">
-                                        {{ $project->completed_steps }} de {{ $project->steps_count }} entregas
+                                        class="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Progreso
+                                        General</span>
+                                    <span class="text-[10px] font-black text-gray-700 dark:text-gray-200 uppercase">
+                                        {{ $completedSteps }}/{{ $totalSteps }} Entregas
                                     </span>
                                 </div>
-                                <div class="text-right">
-                                    <span
-                                        class="text-2xl font-black text-brand-400 italic leading-none">{{ round($percent) }}%</span>
-                                </div>
+                                <span
+                                    class="text-xl font-black text-brand-500 italic leading-none">{{ round($percent) }}%</span>
                             </div>
                             <div
-                                class="w-full h-3 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden p-1 shadow-inner">
-                                <div class="h-full bg-gradient-to-r from-brand-300 to-brand-600 rounded-full transition-all duration-1000 group-hover:shadow-[0_0_15px_rgba(74,222,128,0.5)]"
+                                class="w-full h-2 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden p-[2px] shadow-inner">
+                                <div class="h-full bg-gradient-to-r from-brand-400 to-brand-600 rounded-full transition-all duration-1000"
                                     style="width: {{ $percent }}%"></div>
                             </div>
                         @else
-                            <div
-                                class="py-4 px-6 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20 text-center">
-                                <span
-                                    class="text-[9px] font-black uppercase text-red-500 italic tracking-[0.2em]">Alumno
-                                    estancado: Proyecto no iniciado</span>
+                            <div class="h-full flex items-center">
+                                <span class="text-[9px] font-bold text-gray-300 uppercase italic">Esperando asignación
+                                    de capítulos...</span>
                             </div>
                         @endif
                     </div>
 
-                    {{-- Botón de Acción Focalizado --}}
-                    <div class="w-full md:w-auto">
-                        @if ($project)
-                            <button wire:click="reviewProject('{{ $project->uuid }}')"
-                                class="w-full px-10 py-5 bg-gray-900 dark:bg-brand-600 text-white rounded-[1.8rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:scale-105 active:scale-95 transition-all group-hover:bg-brand-500 group-hover:shadow-brand-500/20">
-                                Supervisar Avance →
-                            </button>
-                        @else
-                            <button
-                                class="w-full px-10 py-5 bg-gray-100 dark:bg-gray-700 text-gray-400 rounded-[1.8rem] text-[10px] font-black uppercase tracking-[0.3em] cursor-not-allowed">
-                                Sin Contenido
-                            </button>
-                        @endif
+                    {{-- 4. BOTÓN DE ACCIÓN --}}
+                    <div class="flex-shrink-0 ml-4">
+                        <button wire:click="reviewProject('{{ $project?->uuid }}')"
+                            class="px-10 py-3 bg-gray-900 dark:bg-brand-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md active:scale-95">
+                            Revisar →
+                        </button>
                     </div>
+
                 </div>
             </div>
         @empty
             <div
-                class="py-32 text-center bg-white dark:bg-gray-800 rounded-[4rem] shadow-2xl border-2 border-dashed border-gray-100 dark:border-gray-700">
-                <div
-                    class="w-24 h-24 bg-gray-50 dark:bg-gray-900 rounded-[2.5rem] mx-auto flex items-center justify-center mb-8">
-                    <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                            stroke-width="1.5" />
-                    </svg>
-                </div>
-                <h3 class="text-xl font-black text-gray-900 dark:text-white uppercase italic tracking-widest mb-2">Aula
-                    Vacía</h3>
-                <p class="text-gray-400 text-sm max-w-xs mx-auto italic font-medium">Comparte el código de invitación
-                    con tus estudiantes para que aparezcan en este panel.</p>
+                class="w-full py-16 text-center border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-[3rem]">
+                <p class="text-gray-400 text-xs font-black uppercase italic tracking-widest">Aula sin investigadores
+                    registrados</p>
             </div>
         @endforelse
     </div>
-
-    {{-- Paginación MSHO Style --}}
-    <div class="mt-12 flex justify-center">
-        <div class="bg-white dark:bg-gray-800 p-2 rounded-[2rem] shadow-xl">
-            {{ $students->links() }}
-        </div>
-    </div>
-</div>

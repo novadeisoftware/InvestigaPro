@@ -20,6 +20,7 @@ class Classroom extends Model
         'advisor_id',       // ID del Usuario que actúa como Asesor
         'name',             // Nombre del curso o sección
         'invitation_code',  // Código para que los alumnos se unan
+        'document_type',    // NUEVO: 'PROYECTO DE TESIS' o 'INFORME FINAL'
         'status',            // Estado actual del aula (active, inactive, archived)
         'step_strategy'
     ];

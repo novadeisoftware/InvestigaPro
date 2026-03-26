@@ -41,6 +41,7 @@ class ManageClassroomSteps extends Component
         $this->classroom = Classroom::find($classroomId);
         $this->availability_mode = $this->classroom->step_strategy ?? 'locked';
         
+
         // 2. Cargamos las fechas actuales de los pasos en el array
         foreach ($this->classroom->classroomSteps as $step) {
             $this->stepDates[$step->id] = $step->available_at 

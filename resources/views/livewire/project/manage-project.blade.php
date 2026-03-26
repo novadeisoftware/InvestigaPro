@@ -17,7 +17,7 @@
         <div class="relative w-full md:w-96">
             <input wire:model.live.debounce.300ms="search" type="text"
                 placeholder="Buscar tesis por título o universidad..."
-                class="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border-none rounded-2xl focus:ring-2 focus:ring-brand-500 dark:text-gray-200 text-sm shadow-sm">
+                class="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border rounded-2xl focus:ring-2 focus:ring-brand-500 dark:text-gray-200 text-sm shadow-sm">
             <div class="absolute left-4 top-3.5 text-gray-400">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="2" />

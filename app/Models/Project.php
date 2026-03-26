@@ -203,4 +203,12 @@ class Project extends Model
     {
         return 'uuid';
     }
+
+    /**
+     * Atributo virtual para asegurar que siempre haya un título visible.
+     */
+    public function getDisplayTitleAttribute(): string
+    {
+        return $this->title ?? 'Investigación sin título definido';
+    }
 }
