@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 use Gemini\Data\SafetySetting;
 use Gemini\Enums\HarmCategory;
 use Gemini\Enums\HarmBlockThreshold;
+use Gemini\Enums\MimeType;
+use Gemini\Data\Blob;
 
 class AiWriterService
 {
@@ -161,6 +163,118 @@ class AiWriterService
 
         return $this->callGemini($prompt);
     }
+
+    /**
+     * Analiza un archivo de tesis para extraer el contexto y datos generales.
+     * Soporta PDF y Word (el contenido se envía como bytes a Gemini).
+     */
+    public function analyzeThesisFile(string $filePath): array
+    {
+        // 1. Validar que el archivo existe
+        if (!file_exists($filePath)) {
+            throw new \Exception("El archivo no se encuentra en la ruta especificada.");
+        }
+
+        // 2. Leer el contenido binario y codificar en base64
+        $fileContent = base64_encode(file_get_contents($filePath));
+        $mimeType = mime_content_type($filePath);
+
+        // 3. Crear el Prompt Maestro de Análisis
+   $prompt = "
+    ACTÚA COMO UN ASESOR SENIOR DE TESIS Y EXPERTO EN METODOLOGÍA DE LA INVESTIGACIÓN.
+    TAREA: Analiza el documento adjunto y extrae la información para completar los 10 pasos clave de la estructura de investigación.
+
+    DEBES DEVOLVER UN JSON PURO CON ESTA ESTRUCTURA EXACTA:
+    {
+        \"datos_generales\": {
+            \"area\": \"Área de estudio identificada\",
+            \"objeto\": \"Objeto de estudio específico\",
+            \"problema\": \"Resumen técnico de la problemática\",
+            \"solucion\": \"Alternativa de solución propuesta\",
+            \"lugar\": \"Ciudad y Región\",
+            \"tiempo\": \"Año o periodo de ejecución\"
+        },
+        \"resumen_pasos\": [
+            {\"paso\": 1, \"titulo\": \"I. Antecedentes\", \"estado\": \"\", \"resumen\": \"\"},
+            {\"paso\": 2, \"titulo\": \"II. Marco Teórico\", \"estado\": \"\", \"resumen\": \"\"},
+            {\"paso\": 3, \"titulo\": \"III. Problema\", \"estado\": \"\", \"resumen\": \"\"},
+            {\"paso\": 4, \"titulo\": \"IV. Hipótesis\", \"estado\": \"\", \"resumen\": \"\"},
+            {\"paso\": 5, \"titulo\": \"V. Objetivos\", \"estado\": \"\", \"resumen\": \"\"},
+            {\"paso\": 6, \"titulo\": \"VI. Metodología\", \"estado\": \"\", \"resumen\": \"\"},
+            {\"paso\": 7, \"titulo\": \"VII. Cronograma\", \"estado\": \"\", \"resumen\": \"\"},
+            {\"paso\": 8, \"titulo\": \"VIII. Presupuesto\", \"estado\": \"\", \"resumen\": \"\"},
+            {\"paso\": 9, \"titulo\": \"IX. Bibliografía\", \"estado\": \"\", \"resumen\": \"\"},
+            {\"paso\": 10, \"titulo\": \"X. Anexos\", \"estado\": \"\", \"resumen\": \"\"}
+        ],
+        \"analisis_detallado\": {
+            \"01_antecedentes\": \"...\",
+            \"02_marco_teorico\": \"...\",
+            \"03_problema\": \"...\",
+            \"04_objetivos\": \"...\",
+            \"05_hipotesis\": \"...\",
+            \"06_metodologia\": \"...\",
+            \"07_resultados\": \"...\",
+            \"08_discusion\": \"...\",
+            \"09_conclusiones\": \"...\",
+            \"10_bibliografia\": \"...\"
+        },
+        \"resumen_ejecutivo\": \"Genera aquí un texto extenso compuesto por 10 párrafos claramente diferenciados. Cada párrafo debe iniciar con el nombre del paso (ej: '01. ANTECEDENTES: ...'). El contenido de cada párrafo debe ser un resumen detallado y técnico (mínimo 6 líneas por paso) basado exclusivamente en lo hallado en el documento. Si un paso no existe, el párrafo debe decir 'SECCIÓN NO DETECTADA: El documento no presenta información sobre este punto'.\"
+    }
+
+    REGLAS CRÍTICAS:
+    1. Para cada objeto en 'resumen_pasos', el 'estado' debe ser 'completado' si encontraste información suficiente o 'faltante' si no existe en el documento.
+    2. En 'resumen', escribe una frase de máximo 15 palabras resumiendo el hallazgo de ese paso.
+    3. Si una sección es 'faltante', en 'analisis_detallado' escribe 'Sección no detectada en el documento original'.
+    4. El formato de salida debe ser JSON PURO, sin textos adicionales, para poder ser procesado por json_decode.
+";
+
+        try {
+    $model = $this->client->generativeModel(model: self::MODEL);
+
+    // 1. Detectamos el MIME type del archivo de forma segura
+    $detectedMime = mime_content_type($filePath);
+
+    // 2. Convertimos el string al Enum de Gemini usando el método from()
+    // Esto evita el error de "Undefined Constant"
+    try {
+        $geminiMime = \Gemini\Enums\MimeType::from($detectedMime);
+    } catch (\ValueError $e) {
+        // Si no lo reconoce (ej. un docx raro), forzamos PDF o lanzamos error
+        $geminiMime = \Gemini\Enums\MimeType::PDF; 
+    }
+
+    // 3. Enviamos el contenido a Gemini
+    $result = $model->generateContent([
+        $prompt,
+        new \Gemini\Data\Blob(
+            mimeType: $geminiMime,
+            data: $fileContent
+        )
+    ]);
+
+    $rawText = $result->text();
+    
+    // 4. Limpiamos y decodificamos el JSON
+    $cleanJson = preg_replace('/^```json|```$/m', '', $rawText);
+    $decoded = json_decode(trim($cleanJson), true);
+
+    // Si el decode falla, intentamos limpiar caracteres extraños
+    if (!$decoded) {
+        Log::warning("Gemini devolvió un JSON mal formado, intentando limpiar...");
+        return [
+            'error' => 'No se pudo parsear el JSON de la IA',
+            'raw' => $rawText
+        ];
+    }
+
+    return $decoded;
+
+} catch (\Exception $e) {
+    Log::error("DETALLE ERROR GEMINI EN SETUP: " . $e->getMessage());
+    throw new \Exception("Error al procesar el documento: " . $e->getMessage());
+}
+    }
+
 
     /**
      * MÉTODO EXCLUSIVO PARA PARAFRASEO ACADÉMICO

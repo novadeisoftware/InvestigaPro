@@ -34,6 +34,8 @@ class Project extends Model
         'settings',        // Configuración extra del proyecto (JSON: fuentes, márgenes, etc.)
         'general_data',    // ETAPA 1: Datos técnicos (JSON: área, objeto, problema, lugar, tiempo)
         'setup_step',      // Rastreador del Wizard: 1 (Datos), 2 (Título), 3 (Finalizado)
+        'ia_analysis',       // Resumen de analisi de IA, si es que sube un archivo o documento
+        'has_been_analyzed', // Para saber si ya ha sido analizado por la IA
         
         'ai_word_limit',   // Límite total de palabras permitidas por la IA para este proyecto
         'ai_words_used',   // Contador de palabras generadas por la IA hasta el momento
@@ -48,10 +50,12 @@ class Project extends Model
     protected $casts = [
         'settings' => 'array',
         'general_data' => 'array',
+        'ia_analysis' => 'array',
         'expires_at' => 'datetime',
         'ai_word_limit' => 'integer',
         'ai_words_used' => 'integer',
         'setup_step' => 'integer',
+        'has_been_analyzed' => 'boolean',
     ];
 
     /**
@@ -94,6 +98,14 @@ class Project extends Model
     public function comments()
     {
         return $this->hasMany(ProjectComment::class);
+    }
+
+    /**
+     * RELACIÓN FALTANTE: Vincula el proyecto con los detalles de pago
+     */
+    public function paymentItems(): HasMany 
+    { 
+        return $this->hasMany(PaymentItem::class); 
     }
     
     /* |--------------------------------------------------------------------------
@@ -210,5 +222,20 @@ class Project extends Model
     public function getDisplayTitleAttribute(): string
     {
         return $this->title ?? 'Investigación sin título definido';
+    }
+
+    
+    /**
+     * Accesor para saber si el proyecto está pagado.
+     * Se accede como: $project->is_paid
+     */
+    public function getIsPaidAttribute(): bool
+    {
+        // Ahora sí funcionará porque definimos la relación arriba
+        return $this->paymentItems()
+            ->whereHas('payment', function ($query) {
+                $query->where('status', 'completed');
+            })
+            ->exists();
     }
 }

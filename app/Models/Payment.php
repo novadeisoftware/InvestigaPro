@@ -3,67 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
 {
-    /**
-     * Atributos asignables masivamente.
-     */
+    use SoftDeletes;
+
     protected $fillable = [
-        'user_id',
-        'subscription_id',
-        'project_id',
-        'niubiz_order_id',
-        'niubiz_transaction_id',
-        'amount',
-        'currency',
-        'payment_method',
-        'status',
+        'user_id', 'advisor_id', 'payment_method_id', 'total_amount', 
+        'advisor_commission', 'status', 'transaction_id', 'receipt_path', 'payment_data'
     ];
 
-    /**
-     * Conversión de tipos automática.
-     */
-    protected $casts = [
-        'amount' => 'decimal:2',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
+    protected $casts = ['payment_data' => 'array'];
 
-    /* |--------------------------------------------------------------------------
-       | Relaciones
-       |-------------------------------------------------------------------------- */
-
-    /** El usuario que realizó el pago */
-    public function user(): BelongsTo 
-    { 
-        return $this->belongsTo(User::class); 
-    }
-
-    /** La suscripción que se activa con este pago (si aplica) */
-    public function subscription(): BelongsTo 
-    { 
-        return $this->belongsTo(Subscription::class); 
-    }
-
-    /** El proyecto (tesis) al que se le recargaron tokens (si aplica) */
-    public function project(): BelongsTo 
-    { 
-        return $this->belongsTo(Project::class); 
-    }
-
-    /* |--------------------------------------------------------------------------
-       | Scopes (Filtros Rápidos)
-       |-------------------------------------------------------------------------- */
-
-    public function scopeApproved($query)
-    {
-        return $query->where('status', 'approved');
-    }
-
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
-    }
+    public function user() { return $this->belongsTo(User::class); }
+    public function advisor() { return $this->belongsTo(User::class, 'advisor_id'); }
+    public function method() { return $this->belongsTo(PaymentMethod::class, 'payment_method_id'); }
+    public function items() { return $this->hasMany(PaymentItem::class); }
 }

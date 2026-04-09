@@ -286,6 +286,7 @@
                 <div class="flex items-center justify-end gap-4 pt-10 mt-6">
                     <button type="button" @click="open = false"
                         class="text-sm font-bold text-gray-400">Cancelar</button>
+                        
                     <x-common.button-submit wire:click="store" target="store" variant="brand"
                         class="rounded-2xl px-10 py-4 shadow-xl">
                         {{ $classroom_id ? 'Actualizar' : 'Registrar' }}

@@ -55,7 +55,7 @@ class SidebarController extends Controller
                     ],*/
                     [
                         'icon' => 'project-icon',
-                        'name' => 'Investigaciones',
+                        'name' => 'Proyectos',
                         'path' => '/project', // Item simple sin sub-items
                     ],
                     [

@@ -7,7 +7,7 @@
     x-show="loading" 
     x-transition.opacity.duration.300ms
     {{ $attributes->merge([
-        'class' => ($fullPage ? 'fixed' : 'absolute') . ' inset-0 z-[999] flex flex-col items-center justify-center bg-white/80 dark:bg-gray-900/90 backdrop-blur-sm rounded-3xl'
+        'class' => ($fullPage ? 'fixed' : 'absolute') . ' inset-0 z-[9999] flex flex-col items-center justify-center bg-white/80 dark:bg-gray-900/90 backdrop-blur-sm rounded-3xl'
     ]) }}
 >
     <div class="relative">

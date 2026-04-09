@@ -1,5 +1,6 @@
 <div>
-    <script src="https://cdn.tiny.cloud/1/g65hxgamvteugh8dkjisxb1cmfvk0hrzcjixkntcw2mhxt9c/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+    
+    <script src="{{ asset('js/tinymce/tinymce.min.js') }}"></script>
 <script>
   tinymce.init({
     height: 620,

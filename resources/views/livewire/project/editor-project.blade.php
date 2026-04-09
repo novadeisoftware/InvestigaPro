@@ -1,6 +1,6 @@
 <div class="flex bg-[#F3F4F6] dark:bg-gray-950 overflow-hidden" x-data="{ leftSidebar: false, rightSidebar: false, loading: false }"
     x-on:draft-generated.window="loading = false" class="relative">
-  
+
 
     {{-- LOADER GLOBAL (Debe estar AQUÍ adentro para que x-show="loading" funcione) --}}
     <x-common.loader text="Redactando..." />
@@ -10,8 +10,8 @@
         <div x-show="leftSidebar || rightSidebar" @click="leftSidebar = false; rightSidebar = false"
             class="fixed inset-0 bg-black/50 z-40 lg:hidden" x-transition></div>
 
-        
-         {{-- ASIDE IZQUIERDO: PASOS DEL AULA --}}
+
+        {{-- ASIDE IZQUIERDO: PASOS DEL AULA --}}
         <aside :class="leftSidebar ? 'translate-x-0' : '-translate-x-full'"
             class="fixed inset-y-0 left-0 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-xl z-50 transition-transform duration-300 lg:relative lg:translate-x-0">
             {{-- HEADER: TÍTULO Y ESTADO (SOLO LECTURA) --}}
@@ -52,16 +52,20 @@
                 <p class="text-[12px] font-bold text-gray-600 uppercase">Pasos de la Investigación</p>
                 <button @click="leftSidebar = false" class="lg:hidden text-gray-500">&times;</button>
             </div>
+            {{-- Llamas al componente de estilos una sola vez en tu layout o aquí mismo --}}
 
-            <nav class="flex-1 overflow-y-auto px-4 pb-6 space-y-1 no-scrollbar">
+            <x-common.custom-scrollbar />
+            <nav class="flex-1 overflow-y-auto px-4 pb-6 space-y-1 custom-scrollbar" style="max-height: 720px;">
                 @foreach ($project->steps as $step)
                     <button wire:click="selectStep({{ $step->id }})"
                         @click="if(window.innerWidth < 1024) leftSidebar = false"
                         class="w-full flex items-center gap-3 p-3 rounded-2xl transition-all group {{ $currentStepId == $step->id ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/40' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
+
                         <div
                             class="shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold {{ $currentStepId == $step->id ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400' }}">
                             {{ $step->order }}
                         </div>
+
                         <span class="text-sm font-bold truncate">{{ $step->title }}</span>
                     </button>
                 @endforeach
@@ -100,7 +104,7 @@
                                         Guía {{ $project->university->siglas ?? 'InvestigaPro' }}
                                     </p>
                                     <p
-                                        class="text-xs lg:text-sm text-amber-800 dark:text-amber-200 italic leading-relaxed">
+                                        class="text-xs lg:text-sm text-amber-800 dark:text-amber-200 leading-relaxed">
                                         "{{ $currentStep->structured_data['instrucciones'] }}"
                                     </p>
                                 </div>
@@ -296,96 +300,129 @@
                             @break
 
                             @default
-                            <div wire:ignore wire:key="wrapper-{{ $currentStepId }}" x-data="{
-    content: @entangle('content').live,
-    
-    runParafraseo() {
-        let editor = tinymce.get('tinymce-editor');
-        if (!editor) return;
-        let selectedText = editor.selection.getContent({ format: 'text' });
-        
-        if (selectedText.trim().length < 5) {
-            Swal.fire({
-                title: '¿Qué texto parafraseamos?',
-                text: 'Por favor, sombrea con el mouse el párrafo que deseas mejorar.',
-                icon: 'info',
-                confirmButtonColor: '#4F46E5',
-                customClass: { popup: 'rounded-[2rem]' }
-            });
-            return;
-        }
-        this.$wire.paraphraseSelection(selectedText);
-    },
-
-    initTiny() {
-        if (window.tinymce) { tinymce.remove(); }
-
-        setTimeout(() => {
-            tinymce.init({
-                selector: '#tinymce-editor',
-                height: 690,
-                language: 'es',
-                menubar: false,
-                branding: false,
-                promotion: false,
-                elementpath: false,
-              
-                // Agregamos 'table' a los plugins
-            plugins: 'table lists image advlist autolink link charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media wordcount',
-           // TOOLBAR POTENCIADO: Agregamos controles de tabla y alineación
-            toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | table | bullist numlist | removeformat',
-                
-                {{-- CONFIGURACIÓN CRÍTICA PARA RESALTADOS --}}
-                extended_valid_elements: 'span[class|style]', 
-                entity_encoding: 'raw',
-                verify_html: false,
-
-                {{-- Esto permite que el alumno vea los colores del asesor DENTRO del cuadro de texto --}}
-                content_style: `
-                    body { font-family:Inter,sans-serif; font-size:14px; color: #334155; }
-                    .highlight-error { background-color: #fee2e2; color: #991b1b; border-bottom: 2px solid #ef4444; border-radius: 4px; }
-                    .highlight-suggest { background-color: #fef08a; color: #854d0e; border-bottom: 2px dashed #ca8a04; border-radius: 4px; }
-                    .highlight-success { background-color: #dcfce7; color: #166534; border-bottom: 2px solid #22c55e; border-radius: 4px; }
-                    .ia-highlight { background-color: #f3e8ff; border-bottom: 2px solid #a855f7; border-radius: 4px; }
-                    span { padding: 0 2px; }
-                `,
-
-                setup: (editor) => {
-                    editor.on('init', () => {
-                        editor.setContent(this.content || '');
-                    });
-
-                    window.addEventListener('tinymce-load-content', (event) => {
-                        if (editor && editor.initialized) {
-                            editor.setContent(event.detail.content || '');
-                        }
-                    });
-
-                    {{-- Receptor de IA: Inserta el texto nuevo con un color púrpura suave --}}
-                    window.addEventListener('tinymce-replace-selection', (event) => {
-                        if (editor && editor.initialized) {
-                            const html = `<span class='ia-highlight'>${event.detail.content}</span>`;
-                            editor.insertContent(html);
-                            this.content = editor.getContent();
-                        }
-                    });
-
-                    editor.on('Change KeyUp Undo Redo', () => {
-                        this.content = editor.getContent();
-                    });
-
-                    this.$watch('content', (value) => {
-                        if (editor && editor.initialized && value !== editor.getContent()) {
-                            editor.setContent(value || '');
-                        }
-                    });
-                }
-            });
-        }, 50);
-    }
-}" x-init="initTiny()" @trigger-paraphrase.window="runParafraseo()">
-    <textarea id="tinymce-editor" wire:ignore></textarea>
-</div>
+                                <div wire:ignore wire:key="wrapper-{{ $currentStepId }}" x-data="{
+                                    content: @entangle('content').live,
+                                
+                                    runParafraseo() {
+                                        let editor = tinymce.get('tinymce-editor');
+                                        if (!editor) return;
+                                        let selectedText = editor.selection.getContent({ format: 'text' });
+                                
+                                        if (selectedText.trim().length < 5) {
+                                            Swal.fire({
+                                                title: '¿Qué texto parafraseamos?',
+                                                text: 'Por favor, sombrea con el mouse el párrafo que deseas mejorar.',
+                                                icon: 'info',
+                                                confirmButtonColor: '#4F46E5',
+                                                customClass: { popup: 'rounded-[2rem]' }
+                                            });
+                                            return;
+                                        }
+                                        this.loading = true;
+                                        this.$wire.paraphraseSelection(selectedText);
+                                    },
+                                
+                                    initTiny() {
+                                        if (window.tinymce) { tinymce.remove(); }
+                                
+                                        setTimeout(() => {
+                                            tinymce.init({
+                                                license_key: 'gpl',
+                                                base_url: '/js/tinymce',
+                                                suffix: '.min',
+                                                selector: '#tinymce-editor',
+                                                height: 690,
+                                                language: 'es',
+                                                menubar: false,
+                                                branding: false,
+                                                promotion: false,
+                                                elementpath: false,
+                                                plugins: 'table lists image advlist autolink link charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media wordcount',
+                                                toolbar: 'undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | table | bullist numlist | removeformat',
+                                
+                                                extended_valid_elements: 'span[class|style]',
+                                                entity_encoding: 'raw',
+                                                verify_html: false,
+                                
+                                                content_style: `
+                                                                                                                                                                                body { font-family:Inter,sans-serif; font-size:14px; color: #334155; }
+                                                                                                                                                                                .ia-highlight { background-color: #f3e8ff; border-bottom: 2px solid #a855f7; border-radius: 4px; padding: 0 2px; }
+                                                                                                                                                                            `,
+                                
+                                                setup: (editor) => {
+                                
+                                
+                                                    // 1. MEJORAR (Parafrasear)
+                                                    editor.ui.registry.addButton('ai_paraphrase_btn', {
+                                                        icon: 'ai-prompt', // Estrellitas de IA
+                                                        tooltip: 'Mejorar Redacción con IA',
+                                                        onAction: () => {
+                                                            this.loading = true;
+                                                            this.runParafraseo();
+                                                        }
+                                                    });
+                                
+                                                    // 2. EXPANDIR (Agrandar)
+                                                    editor.ui.registry.addButton('ai_expand_btn', {
+                                                        icon: 'format-code', // Icono que sugiere crecimiento de líneas
+                                                        tooltip: 'Expandir explicación detallada',
+                                                        onAction: () => {
+                                                            const selectedText = editor.selection.getContent({ format: 'text' });
+                                                            if (selectedText.trim().length > 5) {
+                                                                this.loading = true;
+                                                                this.$wire.processAiAction(selectedText, 'expand');
+                                                            }
+                                                        }
+                                                    });
+                                
+                                                    // 4. TABLA (Estructurar)
+                                                    editor.ui.registry.addButton('ai_table_btn', {
+                                                        icon: 'table-classes', // Icono de estructura de tabla
+                                                        tooltip: 'Analizar texto para convertirlo a tablas',
+                                                        onAction: () => {
+                                                            const selectedText = editor.selection.getContent({ format: 'text' });
+                                                            if (selectedText.trim().length > 5) {
+                                                                this.loading = true;
+                                                                this.$wire.processAiAction(selectedText, 'table');
+                                                            }
+                                                        }
+                                                    });
+                                
+                                                    // --- EL MENÚ FLOTANTE CON SEPARADOR ---
+                                                    editor.ui.registry.addContextToolbar('ia_full_menu', {
+                                                        predicate: (node) => !editor.selection.isCollapsed(),
+                                                        // IMPORTANTE: El pipe | crea la línea divisoria
+                                                        items: 'ai_paraphrase_btn ai_expand_btn ai_table_btn | bold italic underline removeformat',
+                                                        position: 'selection',
+                                                        scope: 'node'
+                                                    });
+                                                    // --- TUS LISTENERS EXISTENTES ---
+                                                    editor.on('init', () => { editor.setContent(this.content || ''); });
+                                
+                                                    window.addEventListener('tinymce-replace-selection', (e) => {
+                                                        if (editor && editor.initialized) {
+                                                            editor.insertContent(`<span class='ia-highlight'>${e.detail.content}</span>`);
+                                                            this.content = editor.getContent();
+                                                            this.loading = false;
+                                                        }
+                                                    });
+                                                    editor.on('Change KeyUp Undo Redo', () => {
+                                                        this.content = editor.getContent();
+                                                    });
+                                
+                                                    this.$watch('content', (value) => {
+                                                        if (editor && editor.initialized && value !== editor.getContent()) {
+                                                            editor.setContent(value || '');
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }, 50);
+                                    }
+                                }"
+                                    x-init="initTiny()" @trigger-paraphrase.window="runParafraseo()">
+                                    <textarea id="tinymce-editor" wire:ignore></textarea>
+                                </div>
 
                             </div>
                     @endswitch
@@ -395,6 +432,7 @@
                             Nova Dei Software • Trujillo 2026
                         </p>
                     </div>
+
 
                 </div>
             @else
@@ -1265,13 +1303,13 @@
             </button>
         </div>
 
-          {{-- 
+        {{-- 
             <div class="flex items-center justify-between px-2">
                 <h3 class="text-[15px]  text-gray-900 dark:text-white  leading-none">
                     Feedback Asesoría</h3>
                 <span
                     class="px-2 py-0.5 bg-brand-500 text-white text-[12px] font-black rounded-full shadow-lg">{{ count($comments) }}</span>
-            </div>--}}
+            </div> --}}
 
         {{-- Cuerpo de Herramientas --}}
         <div class="flex-1 space-y-4 overflow-y-auto no-scrollbar">

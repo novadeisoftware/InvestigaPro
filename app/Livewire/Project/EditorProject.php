@@ -279,15 +279,17 @@ class EditorProject extends Component
      */
     public function paraphraseSelection($selectedText, AiWriterService $aiService)
     {
-    // 1. VALIDACIÓN INICIAL: ¿El usuario seleccionó algo?
-    if (empty(trim($selectedText))) {
-        return $this->dispatch('swal', [
-            'title'    => 'Selección vacía',
-            'text'     => 'Por favor, selecciona con el mouse el texto que deseas parafrasear dentro del editor.',
-            'icon'     => 'info',
-            'confirmButtonColor' => '#2563eb', // El color de tu marca Nova Dei
-        ]);
-    }
+
+
+        // 1. VALIDACIÓN INICIAL: ¿El usuario seleccionó algo?
+        if (empty(trim($selectedText))) {
+            return $this->dispatch('swal', [
+                'title'    => 'Selección vacía',
+                'text'     => 'Por favor, selecciona con el mouse el texto que deseas parafrasear dentro del editor.',
+                'icon'     => 'info',
+                'confirmButtonColor' => '#2563eb', // El color de tu marca Nova Dei
+            ]);
+        }
     
         // 1. Activamos loaders (el del botón y el global de JirehLux)
         $this->loading = true; 

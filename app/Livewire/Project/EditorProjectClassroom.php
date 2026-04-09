@@ -88,37 +88,51 @@ class EditorProjectClassroom extends Component
             ->latest()
             ->get();
     }
-
+    
     public function addComment()
     {
+        // Validamos que no sea solo lectura y que el comentario no esté vacío
         if (!$this->isReadOnly || empty(trim($this->newComment))) return;
-
-        ProjectComment::create([
+    
+        // 1. IMPORTANTE: Guardamos el objeto creado en la variable $newComment
+        $newComment = ProjectComment::create([
             'project_step_id' => $this->currentStepId,
-            'user_id' => Auth::id(),
-            'comment' => $this->newComment,
-            'type' => 'observation',
+            'user_id'         => Auth::id(),
+            'comment'         => $this->newComment,
+            'type'            => 'observation',
         ]);
-
-        $this->newComment = '';
+    
+        // 2. Refrescamos la lista de comentarios en la vista lateral
         $this->loadComments();
-
-        $this->dispatch('swal', [
-            'title' => 'Nota registrada',
-            'icon' => 'success',
-            'type' => 'toast',
-            'position' => 'top-end'
-        ]);
+    
+        // 3. Mandamos la señal al frontend (Alpine/TinyMCE)
+        // Pasamos el ID real para que la función irALaNota() sea precisa
+        $this->dispatch('close-note-modal', 
+            id: $newComment->id, 
+            comment: $newComment->comment
+        );
+    
+        // 4. Limpiamos el input del modal
+        $this->newComment = '';
+    
+        // 5. Notificación tipo Toast (estilo Nova Dei)
+      //  $this->dispatch('swal', [
+      //      'title'    => 'Nota registrada',
+      //      'icon'     => 'success',
+      //      'type'     => 'toast',
+      //      'position' => 'top-end'
+      //  ]);
     }
-
     public function deleteComment($commentId)
     {
         if ($this->isReadOnly) {
             ProjectComment::where('id', $commentId)->delete();
             $this->loadComments();
+    
+            // LANZAR EVENTO PARA EL EDITOR
+            $this->dispatch('note-deleted', id: $commentId);
         }
     }
-
     /**
      * MÉTODO PARA GUARDAR EL RESALTADO DEL ASESOR
      * Recibe el contenido COMPLETO del editor desde JS para asegurar sincronía
@@ -142,7 +156,7 @@ class EditorProjectClassroom extends Component
             // Opcional: Notificamos éxito silencioso
             $this->dispatch('swal', [
                 'type'     => 'toast',
-                'title'    => 'Marca guardada en el proyecto',
+                'title'    => 'Nota guardada en el proyecto',
                 'icon'     => 'success',
                 'position' => 'bottom-end',
             ]);

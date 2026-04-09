@@ -1,4 +1,4 @@
-<div class="p-8 max-w-7xl mx-auto animate-fade-in" x-data="{ tab: @entangle('activeTab'), showOffers: @entangle('showOffers') }">
+<div class="p-8 max-w-7xl mx-auto animate-fade-in overflow-y-auto" style="height: 800px" x-data="{ tab: @entangle('activeTab'), showOffers: @entangle('showOffers') }">
 
     {{-- SECCIÓN: MI ESTADO ACTUAL (Solo se ve si tiene suscripción y no estamos viendo ofertas) --}}
     {{-- SECCIÓN: MI ESTADO ACTUAL --}}
@@ -340,4 +340,86 @@
             </button>
         </div>
     </div>
+
+           {{-- GRID DE PLANES --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            
+            {{-- Plan 01: Proyecto --}}
+            <div class="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-[2.5rem] p-8 flex flex-col hover:border-brand-500 transition-all group shadow-sm">
+                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Solo Proyecto</h3>
+                <div class="flex items-baseline gap-1 mb-6">
+                    <span class="text-4xl font-black text-gray-900 dark:text-white">S/ 129</span>
+                    <span class="text-lg font-bold text-gray-400">.90</span>
+                </div>
+                <ul class="space-y-4 mb-8 flex-1">
+                    <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                        <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Plan de Tesis completo
+                    </li>
+                    <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                        <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Asistente IA 24/7
+                    </li>
+                </ul>
+                <a href="https://wa.me/TU_NUMERO?text={{ urlencode('Hola! Quiero activar mi PROYECTO DE TESIS en InvestigaPro. Mi título es: ' ) }}" target="_blank"
+                   class="w-full py-4 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-2xl text-center text-xs font-black uppercase tracking-widest transition-all">
+                    Elegir Plan
+                </a>
+            </div>
+
+            {{-- Plan 02: Combo Grado Total (EL DESTACADO) --}}
+            <div class="relative bg-white dark:bg-gray-900 border-4 border-brand-500 rounded-[2.5rem] p-8 flex flex-col transform md:-translate-y-4 shadow-2xl shadow-brand-500/20">
+                <div class="absolute -top-5 left-1/2 -translate-x-1/2 bg-brand-500 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
+                    Más Popular
+                </div>
+                <h3 class="text-xs font-black text-brand-500 uppercase tracking-widest mb-2">Grado Total (Combo)</h3>
+                <div class="flex items-baseline gap-1 mb-2">
+                    <span class="text-5xl font-black text-gray-900 dark:text-white">S/ 249</span>
+                    <span class="text-xl font-bold text-gray-400">.90</span>
+                </div>
+                <p class="text-[10px] text-green-500 font-bold uppercase mb-6">Ahorras S/ 70.00</p>
+                <ul class="space-y-4 mb-8 flex-1">
+                    <li class="flex items-center gap-3 text-sm text-gray-900 dark:text-gray-100 font-bold">
+                        <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Proyecto + Informe Final
+                    </li>
+                    <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                        <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        IA con Mayor Límite
+                    </li>
+                    <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                        <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Prioridad en Soporte
+                    </li>
+                </ul>
+                <a href="https://wa.me/TU_NUMERO?text={{ urlencode('Hola! Quiero el COMBO GRADO TOTAL (S/ 249.90). Mi proyecto es: ' ) }}" target="_blank"
+                   class="w-full py-5 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-center text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-brand-500/40">
+                    Activar Ahora
+                </a>
+            </div>
+
+            {{-- Plan 03: Informe --}}
+            <div class="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-[2.5rem] p-8 flex flex-col hover:border-brand-500 transition-all group shadow-sm">
+                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Solo Informe</h3>
+                <div class="flex items-baseline gap-1 mb-6">
+                    <span class="text-4xl font-black text-gray-900 dark:text-white">S/ 189</span>
+                    <span class="text-lg font-bold text-gray-400">.90</span>
+                </div>
+                <ul class="space-y-4 mb-8 flex-1">
+                    <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                        <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Tesis Completa / Sustentación
+                    </li>
+                    <li class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                        <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Resultados y Discusión IA
+                    </li>
+                </ul>
+                <a href="https://wa.me/TU_NUMERO?text={{ urlencode('Hola! Quiero activar mi INFORME FINAL en InvestigaPro. Mi título es: ' ) }}" target="_blank"
+                   class="w-full py-4 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-2xl text-center text-xs font-black uppercase tracking-widest transition-all">
+                    Elegir Plan
+                </a>
+            </div>
+
+        </div>
 </div>

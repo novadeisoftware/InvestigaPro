@@ -24,6 +24,7 @@
     @endif
 
     <div x-data="{ isOptionSelected: @entangle($attributes->wire('model')).live ? true : false }" class="relative z-20 bg-transparent">
+        
         <select
             {{ $disabled ? 'disabled' : '' }}
             @change="isOptionSelected = true"

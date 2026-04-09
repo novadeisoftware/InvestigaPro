@@ -286,109 +286,128 @@
                     @break
 
                     @default
-                        {{-- 2. EL EDITOR (Mantiene su lógica interna) --}}
+                        {{-- 2. EL EDITOR SIMPLIFICADO (SOLO NOTAS) --}}
                         <div wire:ignore wire:key="wrapper-{{ $currentStepId }}" x-data="{
                             content: @entangle('content').live,
-                            resaltarSeleccion(color) {
+                            showNotePortal: false,
+                            pendingTextHtml: '',
+                        
+                            abrirModalNota() {
                                 let editor = tinymce.get('tinymce-editor');
                                 if (!editor) return;
                         
-                                let selectedText = editor.selection.getContent();
-                               // --- VALIDACIÓN: Si no hay nada seleccionado ---
-                                 if (selectedText.trim().length === 0) {
-                                     Swal.fire({
-                                         title: '¡Espera!',
-                                         text: 'Primero selecciona con el mouse el texto que deseas marcar o limpiar.',
-                                         icon: 'warning',
-                                         confirmButtonText: 'Entendido',
-                                         confirmButtonColor: '#4F46E5', // Color Brand
-                                         background: '#ffffff',
-                                         customClass: {
-                                             popup: 'rounded-[2rem]',
-                                             confirmButton: 'rounded-full px-6'
-                                         }
-                                     });
-                                     return;
-                                 }
+                                this.pendingTextHtml = editor.selection.getContent({ format: 'html' });
                         
-                                // Activamos modo edición para poder modificar
-                                editor.mode.set('design');
-                        
-                                // 2. Lógica para LIMPIAR o RESALTAR
-                                if (color === 'clear') {
-                                    // Elimina el formato (clases, spans de color, etc.) del texto seleccionado
-                                    editor.execCommand('RemoveFormat');
-                        
-                                    var titleToast = 'Marca eliminada';
-                                } else {
-                                    const classes = {
-                                        red: 'highlight-error',
-                                        yellow: 'highlight-suggest',
-                                        green: 'highlight-success'
-                                    };
-                        
-                                    const activeClass = classes[color] || 'highlight-suggest';
-                        
-                                    // Insertamos el span con la clase elegida
-                                    const highlight = `<span class='${activeClass}'>${selectedText}</span>`;
-                                    editor.execCommand('mceInsertContent', false, highlight);
-                        
-                                    var titleToast = 'Marca aplicada';
+                                if (!this.pendingTextHtml || this.pendingTextHtml.trim().length === 0) {
+                                    Swal.fire({ title: '¡Espera!', text: 'Selecciona un texto primero.', icon: 'warning', confirmButtonColor: '#4F46E5' });
+                                    return;
                                 }
                         
-                                // Volvemos a bloquear
-                                editor.mode.set('readonly');
-                        
-                                // 3. Sincronizamos con el servidor
-                                let updatedFullContent = editor.getContent();
-                                this.$wire.updateContentFromAdvisor(updatedFullContent);
-                        
-                        
+                                this.showNotePortal = true;
+                                window.dispatchEvent(new CustomEvent('open-note-modal'));
                             },
                         
-                            initTiny() {
-                                if (window.tinymce) {
-                                    tinymce.remove();
+                            irALaNota(notaId) {
+                                let editor = tinymce.get('tinymce-editor');
+                                if (!editor) return;
+                                let span = editor.dom.select(`span[data-id='${notaId}']`)[0];
+                                if (span) {
+                                    editor.selection.select(span);
+                                    span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    const originalStyle = span.style.cssText;
+                                    span.style.backgroundColor = '#4F46E5';
+                                    span.style.color = '#FFFFFF';
+                                    setTimeout(() => { span.style.cssText = originalStyle; }, 2000);
                                 }
+                            },
                         
+                            // --- ESTA FUNCIÓN ELIMINA EL SPAN MANTENIENDO EL TEXTO ---
+                            // Dentro del objeto x-data del editor...
+                            eliminarResaltado(notaId) {
+                                let editor = tinymce.get('tinymce-editor');
+                                if (!editor) return;
+                        
+                                // Buscamos el span por el data-id
+                                let span = editor.dom.select(`span[data-id='${notaId}']`)[0];
+                        
+                                if (span) {
+                                    // 'true' indica que borre la etiqueta span pero mantenga el texto interno
+                                    editor.dom.remove(span, true);
+                        
+                                    // Actualizamos el contenido en Livewire
+                                    this.content = editor.getContent();
+                                    this.$wire.updateContentFromAdvisor(this.content);
+                                }
+                            },
+                            
+                        
+                            initTiny() {
+                                if (window.tinymce) { tinymce.remove(); }
                                 setTimeout(() => {
                                     tinymce.init({
+                                        license_key: 'gpl',
+                                        base_url: '/js/tinymce',
+                                        suffix: '.min',
                                         selector: '#tinymce-editor',
                                         height: 620,
                                         language: 'es',
                                         menubar: false,
                                         branding: false,
                                         promotion: false,
-                                        readonly: true,
                                         toolbar: false,
                                         elementpath: false,
-                                        plugins: 'table lists image',
-                                        extended_valid_elements: 'span[class|style]',
-                                        entity_encoding: 'raw',
                                         verify_html: false,
-                                        {{-- Estilos internos para que el asesor vea los colores mientras edita --}}
+                                        extended_valid_elements: 'span[class|style|title|data-id]',
                                         content_style: `
-                                                                                                                                                                        body { font-family:Inter,sans-serif; font-size:14px; }
-                                                                                                                                                                        .highlight-error { background-color: #fee2e2; border-bottom: 2px solid #ef4444; color: #991b1b; }
-                                                                                                                                                                        .highlight-suggest { background-color: #fef08a; border-bottom: 2px dashed #ca8a04; color: #854d0e; }
-                                                                                                                                                                        .highlight-success { background-color: #dcfce7; border-bottom: 2px solid #22c55e; color: #166534; }
-                                                                                                                                                                        span { padding: 2px 0; }
-                                                                                                                                                                    `,
+                                                                                            body { font-family:Inter,sans-serif; font-size:14px; line-height:1.6; }
+                                                                                            .highlight-suggest { background-color: #fef08a; border-bottom: 2px dashed #ca8a04; color: #854d0e; padding: 2px 0; }
+                                                                                        `,
                                         setup: (editor) => {
-                                            editor.on('init', () => {
-                                                editor.setContent(this.content || '');
+                                            // Definimos solo el botón de nota
+                                            editor.ui.registry.addButton('add_note_portal', {
+                                                icon: 'comment',
+                                                tooltip: 'Escribir Nota',
+                                                onAction: () => this.abrirModalNota()
                                             });
                         
-                                            editor.on('Change KeyUp Undo Redo', () => {
-                                                this.content = editor.getContent();
+                                            // Menú contextual: SOLO aparece el botón de nota al seleccionar
+                                            editor.ui.registry.addContextToolbar('advisor_menu', {
+                                                predicate: (node) => !editor.selection.isCollapsed(),
+                                                items: 'add_note_portal',
+                                                position: 'selection',
+                                                scope: 'node'
+                                            });
+                        
+                                            editor.on('init', () => editor.setContent(this.content || ''));
+                        
+                                            // Bloquear escritura pero permitir comandos
+                                            editor.on('keydown', (e) => {
+                                                if (!e.ctrlKey && !e.metaKey) {
+                                                    e.preventDefault();
+                                                    return false;
+                                                }
                                             });
                                         }
                                     });
                                 }, 100);
                             }
                         }"
-                            x-init="initTiny()" {{-- Capturamos el color desde el detalle del evento --}}
-                            @trigger-highlight.window="resaltarSeleccion($event.detail.color)">
+                            x-init="initTiny()" @navegar-a-nota.window="irALaNota($event.detail.id)"
+                            @close-note-modal.window="
+                               let editor = tinymce.get('tinymce-editor');
+                               if (editor && pendingTextHtml) {
+                                   showNotePortal = false; 
+                                   const idNota = $event.detail.id; 
+                                   const comentario = $event.detail.comment;
+                                   // Insertamos siempre con la clase amarilla (highlight-suggest)
+                                   const highlight = `<span data-id='${idNota}' class='highlight-suggest' title='${comentario}'>${pendingTextHtml}</span>`;
+                                   editor.execCommand('mceInsertContent', false, highlight);
+                                   content = editor.getContent();
+                                   $wire.updateContentFromAdvisor(content);
+                                   pendingTextHtml = '';
+                               }
+                           "
+                           @note-deleted.window="eliminarResaltado($event.detail.id)">
                             <textarea id="tinymce-editor" wire:ignore></textarea>
                         </div>
 
@@ -397,7 +416,7 @@
                     <style>
                         /* Estilo de resaltado suave y moderno */
                         .highlight-error {
-                            background-color: rgba(239, 68, 68, 0.15) !important;
+                            background-color: rgba(0, 0, 0, 0.15) !important;
                             color: #b91c1c !important;
                             border-bottom: 2px solid #ef4444;
                             padding: 0 2px;
@@ -429,6 +448,56 @@
 
                         .dark .highlight-success {
                             color: #86efac !important;
+                        }
+
+
+
+                        /* 1. Color ROJO - Error Crítico */
+                        .tox.tox-tinymce-aux .tox-tbtn[aria-label*="Error"] {
+                            color: #ef4444 !important;
+                        }
+
+                        .tox.tox-tinymce-aux .tox-tbtn[aria-label*="Error"] svg {
+                            fill: #ef4444 !important;
+                        }
+
+                        /* 2. Color AMARILLO - Sugerencia */
+                        .tox.tox-tinymce-aux .tox-tbtn[aria-label*="Sugerencia"] {
+                            color: #f59e0b !important;
+                        }
+
+                        .tox.tox-tinymce-aux .tox-tbtn[aria-label*="Sugerencia"] svg {
+                            fill: #f59e0b !important;
+                        }
+
+                        /* 3. Color VERDE - Correcto */
+                        .tox.tox-tinymce-aux .tox-tbtn[aria-label*="Correcto"] {
+                            color: #10b981 !important;
+                        }
+
+                        .tox.tox-tinymce-aux .tox-tbtn[aria-label*="Correcto"] svg {
+                            fill: #10b981 !important;
+                        }
+
+                        /* 4. Color BLANCO - Quitar Marca */
+                        .tox.tox-tinymce-aux .tox-tbtn[aria-label*="Quitar"] {
+                            color: #ffffff !important;
+                            opacity: 0.7;
+                        }
+
+
+                        /* El botón de nota en un color azul cian para diferenciarlo de los resaltadores */
+                        .tox.tox-tinymce-aux .tox-tbtn[aria-label*="observación"] {
+                            color: #06b6d4 !important;
+                            /* Cyan 500 */
+                        }
+
+                        /* Efecto cuando el alumno pasa el mouse por un texto con nota */
+                        .highlight-suggest[title],
+                        .highlight-error[title] {
+                            border-bottom-style: wavy !important;
+                            /* Línea ondulada para indicar que hay texto extra */
+                            cursor: help;
                         }
                     </style>
                 </div>
@@ -473,144 +542,32 @@
         </button>
     </div>
 
-    {{-- BARRA DE MARCADORES (Integrada en el flujo del Aside) --}}
-    @if ($isReadOnly)
-        <div class="mb-8 px-1" x-data="{ marcadorActivo: null }">
-            {{-- Header --}}
-            <div class="flex justify-between items-end mb-3 px-2">
-                <p
-                    class="text-[12px] font-bold text-gray-600 uppercase mb-2">
-                    Resaltador
-                </p>
-            </div>
 
-            {{-- Contenedor de Marcadores --}}
-            <div
-                class="flex gap-1 p-1 bg-gray-100/50 dark:bg-white/5 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-inner">
-                {{-- Botón Rojo --}}
-                <button @click="$dispatch('trigger-highlight', { color: 'red' }); marcadorActivo = 'red'"
-                    :class="marcadorActivo === 'red' ? 'bg-red-500 shadow-lg shadow-red-500/30' : 'hover:bg-red-500/5'"
-                    class="flex-1 flex flex-col items-center justify-center py-3 rounded-[1.5rem] transition-all duration-300 group active:scale-95">
-                    <div :class="marcadorActivo === 'red' ? 'bg-white' : 'bg-red-500'"
-                        class="w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.5)] transition-colors">
-                    </div>
-                    <span :class="marcadorActivo === 'red' ? 'text-white' : 'text-red-600'"
-                        class="text-[10px] font-black uppercase mt-1 transition-colors tracking-tighter">Error</span>
-                </button>
-
-                {{-- Botón Amarillo --}}
-                <button @click="$dispatch('trigger-highlight', { color: 'yellow' }); marcadorActivo = 'yellow'"
-                    :class="marcadorActivo === 'yellow' ? 'bg-yellow-400 shadow-lg shadow-yellow-400/30' :
-                        'hover:bg-yellow-400/5'"
-                    class="flex-1 flex flex-col items-center justify-center py-3 rounded-[1.5rem] transition-all duration-300 group active:scale-95">
-                    <div :class="marcadorActivo === 'yellow' ? 'bg-yellow-900' : 'bg-yellow-600'"
-                        class="w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(250,204,21,0.6)] transition-colors">
-                    </div>
-                    <span :class="marcadorActivo === 'yellow' ? 'text-yellow-900' : 'text-yellow-600'"
-                        class="text-[10px] font-black uppercase mt-1 transition-colors tracking-tighter">Ajuste</span>
-                </button>
-
-                {{-- Botón Verde --}}
-                <button @click="$dispatch('trigger-highlight', { color: 'green' }); marcadorActivo = 'green'"
-                    :class="marcadorActivo === 'green' ? 'bg-green-500 shadow-lg shadow-green-500/30' :
-                        'hover:bg-green-500/5'"
-                    class="flex-1 flex flex-col items-center justify-center py-3 rounded-[1.5rem] transition-all duration-300 group active:scale-95">
-                    <div :class="marcadorActivo === 'green' ? 'bg-white' : 'bg-green-500'"
-                        class="w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)] transition-colors">
-                    </div>
-                    <span :class="marcadorActivo === 'green' ? 'text-white' : 'text-green-600'"
-                        class="text-[10px] font-black uppercase mt-1 transition-colors tracking-tighter">Bien</span>
-                </button>
-            </div>
-
-            {{-- Footer: Limpiar + Nota --}}
-            <div class="mt-4 flex flex-col items-center gap-2">
-                <button @click="$dispatch('trigger-highlight', { color: 'clear' }); marcadorActivo = null"
-                    class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 group transition-all hover:bg-white dark:hover:bg-white/10 shadow-sm">
-                    <span
-                        class="text-[10px] font-black text-gray-400 group-hover:text-primary uppercase tracking-widest transition-colors">
-                        Limpiar Selección
-                    </span>
-                    <div
-                        class="p-0.5 bg-gray-200 dark:bg-gray-700 rounded-full group-hover:bg-brand-500 transition-colors">
-                        <svg class="w-2.5 h-2.5 text-gray-500 dark:text-gray-300 group-hover:text-white"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </div>
-                </button>
-
-                <p class="text-[12px] text-gray-400 leading-relaxed font-medium">
-                    Sombrea el texto y presiona un color
-                </p>
-            </div>
-        </div>
-    @endif
     <div class="space-y-4 overflow-y-auto no-scrollbar flex-1">
-        @if (!$isReadOnly)
-            <button wire:click="generateDraft" wire:loading.attr="disabled"
-                class="w-full p-5 bg-gray-50 dark:bg-gray-800/50 rounded-[2rem] text-left border-2 border-transparent hover:border-brand-200 transition-all group disabled:opacity-50 relative overflow-hidden shadow-sm">
-                <div wire:loading.remove wire:target="generateDraft">
-                    <p
-                        class="text-xs font-black text-gray-900 dark:text-white uppercase italic group-hover:text-brand-600 leading-none">
-                        Redactar Borrador</p>
-                    <p class="text-[10px] text-gray-400 mt-2 font-medium leading-tight">Generar base para este
-                        capítulo.</p>
-                </div>
-                <div wire:loading wire:target="generateDraft" class="flex items-center gap-3">
-                    <svg class="animate-spin h-4 w-4 text-brand-600" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                            stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                        </path>
-                    </svg>
-                    <p class="text-[10px] font-black text-brand-600 uppercase italic">Procesando...</p>
-                </div>
-            </button>
-        @endif
+
+
 
         {{-- FEEDBACK SECTION --}}
         <div class="pt-6 border-t border-gray-100 dark:border-white/5 space-y-4">
-            {{-- 
-            <div class="flex items-center justify-between px-2">
-                <h3 class="text-[15px]  text-gray-900 dark:text-white  leading-none">
-                    Feedback Asesoría</h3>
-                <span
-                    class="px-2 py-0.5 bg-brand-500 text-white text-[12px] font-black rounded-full shadow-lg">{{ count($comments) }}</span>
-            </div> --}}
-
-            @if ($isReadOnly)
-                {{-- Contenedor principal ajustado --}}
-
-
-                {{-- Textarea sin bordes molestos --}}
-
-                <x-form.input.textarea wire:model="newComment" label="Escribe una observación..."
-                    placeholder="Escribe aquí..." />
-                <x-input-error for="newComment" />
-
-                {{-- Botón centrado --}}
-                <x-common.button-submit type="button" wire:click="addComment" variant="brand"
-                    class="rounded-2xl shadow-lg shadow-brand-500/20 w-full flex justify-center items-center py-3">
-                    <x-slot:icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round" />
-                        </svg>
-                    </x-slot:icon>
-                    Registrar Nota
-                </x-common.button-submit>
-            @endif
-
-            <div class="space-y-3">
+            {{-- Header --}}
+            <div class="flex justify-between items-end mb-3 px-2">
+                <p class="text-[12px] font-bold text-gray-600 uppercase">
+                    Notas
+                </p>
+            </div>
+            <div class="space-y-3" x-data="{ notaActivaId: null }">
                 @forelse($comments as $c)
-                    <div
-                        class="p-5 bg-white dark:bg-white/5 rounded-[1.8rem] border border-gray-100 dark:border-white/5 shadow-sm relative group">
+                    <div {{-- Al hacer clic, enviamos el evento al editor y actualizamos el estado local --}}
+                        @click="notaActivaId = {{ $c->id }}; $dispatch('navegar-a-nota', { id: {{ $c->id }} })"
+                        {{-- Escuchamos si el editor activa una nota (por si se hace clic dentro del TinyMCE) --}} @nota-enfocada-desde-editor.window="notaActivaId = $event.detail.id"
+                        :class="notaActivaId == {{ $c->id }} ?
+                            'bg-brand-50 border-brand-500 dark:bg-brand-500/10 dark:border-brand-500 shadow-lg shadow-brand-500/20 scale-[1.02]' :
+                            'bg-white dark:bg-white/5 border-gray-100 dark:border-white/5 shadow-sm'"
+                        class="p-5 rounded-[1.8rem] border relative group cursor-pointer transition-all duration-300 active:scale-95">
 
-                        {{-- Botón de eliminar siempre visible con icono de basura --}}
+                        {{-- Botón de eliminar --}}
                         @if ($isReadOnly)
-                            <button wire:click="deleteComment({{ $c->id }})"
+                            <button wire:click.stop="deleteComment({{ $c->id }})"
                                 class="absolute top-5 right-5 text-gray-400 hover:text-red-500 transition-colors p-1"
                                 title="Eliminar nota">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -620,8 +577,10 @@
                             </button>
                         @endif
 
-                        <p
-                            class="text-[13px] text-gray-700 dark:text-gray-300 leading-relaxed font-medium italic pr-6">
+                        {{-- Texto de la nota - Cambia de color si está activa --}}
+                        <p :class="notaActivaId == {{ $c->id }} ? 'text-brand-700 dark:text-brand-400' :
+                            'text-gray-700 dark:text-gray-300'"
+                            class="text-[13px] leading-relaxed font-medium italic pr-6 transition-colors duration-300">
                             "{{ $c->comment }}"
                         </p>
 
@@ -634,7 +593,8 @@
                             @if (!$isReadOnly)
                                 <span
                                     class="flex items-center gap-1 text-[10px] text-brand-500 font-black uppercase italic">
-                                    <span class="w-1 h-1 bg-brand-500 rounded-full animate-pulse"></span>
+                                    <span class="w-1.5 h-1.5 bg-brand-500 rounded-full"
+                                        :class="notaActivaId == {{ $c->id }} ? 'animate-ping' : 'animate-pulse'"></span>
                                     Pendiente
                                 </span>
                             @endif
@@ -643,8 +603,7 @@
                 @empty
                     <div
                         class="py-10 text-center border-2 border-dashed border-gray-100 dark:border-white/5 rounded-[2rem] opacity-50">
-                        <p
-                            class="text-gray-300 text-[9px] font-black uppercase tracking-widest italic leading-none">
+                        <p class="text-gray-300 text-[9px] font-black uppercase tracking-widest italic">
                             Sin observaciones
                         </p>
                     </div>
@@ -678,5 +637,49 @@
             </div>
         </div>
     @endif
+
+
 </aside>
+
+
+{{-- MODAL DE NOTAS (Vinculado a showNotePortal) --}}
+<x-ui.modal x-data="{ open: false }" x-show="showNotePortal || open" {{-- Escucha el evento que mandas desde el PHP para cerrar todo --}}
+    @open-note-modal.window="open = true; showNotePortal = true"
+    @close-note-modal.window="open = false; showNotePortal = false; loading = false" class="max-w-[650px]">
+
+    <div
+        class="no-scrollbar relative w-full overflow-y-auto rounded-[2.5rem] bg-white p-8 dark:bg-gray-900 lg:p-12 min-h-[450px]">
+        <x-common.loader x-show="loading" text="Sincronizando..." />
+
+        {{-- Cambiamos a showNotePortal para que sea consistente --}}
+        <div x-show="!loading" x-cloak>
+            <div class="mb-10 text-center md:text-left">
+                <h4 class="text-3xl font-black text-gray-900 dark:text-white">
+                    Agregar Nota
+                </h4>
+                <p class="text-sm text-gray-500 mt-2">Escribe la observación técnica para el alumno.</p>
+            </div>
+
+            <div class="space-y-6">
+                <x-form.input.textarea wire:model="newComment" label="Nota:" placeholder="Escribe aquí..." />
+            </div>
+
+            <div class="flex items-center justify-end gap-4 pt-10 mt-6">
+                <button type="button" @click="open = false"
+                    class="text-sm font-bold text-gray-400">Cancelar</button>
+
+                <x-common.button-submit wire:click="addComment" target="addComment" variant="brand"
+                    class="rounded-2xl px-10 py-4 shadow-xl">
+                    Registrar Nota
+                </x-common.button-submit>
+            </div>
+
+
+        </div>
+    </div>
+</x-ui.modal>
+
+
+
+
 </div>
